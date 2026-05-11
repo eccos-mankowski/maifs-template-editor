@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Ticket Editor</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #fff;
+        }
+        #ticket-editor {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        /* Load local fonts */
+        @font-face {
+            font-family: 'Open Sans';
+            src: url('open-sans-v23-latin-regular.woff') format('woff');
+            font-weight: normal;
+            font-style: normal;
+        }
+    </style>
+</head>
+<body>
+<div id="ticket-editor"></div>
+
+<script>
+    // JS Error Logging and Alert Bridge for JavaFX
+    window.onerror = function(message, source, lineno, colno, error) {
+        const errorMsg = "JS Error: " + message + " at " + source + ":" + lineno + ":" + colno;
+        console.error(errorMsg);
+        alert(errorMsg);
+        return false;
+    };
+
+    window.addEventListener('unhandledrejection', function(event) {
+        const msg = "JS Unhandled Rejection: " + event.reason;
+        console.error(msg);
+        alert(msg);
+    });
+
+    window.MF_VE_OBJ = window.MF_VE_OBJ || {};
+    window.MF_VE_OBJ.version = window.MF_VE_OBJ.version || "1.0.0";
+    window.MF_VE_OBJ.apiRoot = window.MF_VE_OBJ.apiRoot || "";
+    window.MF_VE_OBJ.nonce = window.MF_VE_OBJ.nonce || "";
+    window.MF_VE_OBJ.settings = window.MF_VE_OBJ.settings || {
+        active: true,
+        headerTitle: "Ticket",
+        headerSubtitle: "Subtitle",
+        headerTitleBoxPosition: 1,
+        headerTitleBoxTextColor: "#FFFFFF",
+        headerTitleBoxBackgroundColor: "#002D69",
+        ticketText: "Sample Ticket Text",
+        ticketTextBoxTextColor: "#000000",
+        ticketTextBoxBackgroundColor: "#FFFFFF",
+        ticketInfoBoxLayout: 1,
+        footerLayout: 1,
+        address: "Sample Address",
+        legalText: "Sample Legal Text",
+        ticketAltText: ""
+    };
+    window.MF_VE_OBJ.statuses = window.MF_VE_OBJ.statuses || { 1: true };
+    window.MF_VE_OBJ.translations = window.MF_VE_OBJ.translations || {};
+</script>
+
+<script src="./dist/ticket-editor.js" defer></script>
+
+</body>
+</html>

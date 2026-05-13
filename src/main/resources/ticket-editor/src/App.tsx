@@ -470,8 +470,15 @@ const App: React.FC = () => {
                         <InputGroup
                             name="headerImageHeight"
                             type="number"
-                            min={10}
-                            inputRef={register({required: true, min: 10, setValueAs: (v: any) => Number(v) || 95})}
+                            min={0}
+                            inputRef={register({
+                                required: true,
+                                min: 0,
+                                setValueAs: (v: any) => {
+                                    const parsed = Number(v);
+                                    return Number.isFinite(parsed) && parsed >= 0 ? parsed : 95;
+                                },
+                            })}
                         />
                     </FormGroup>
                 </>
@@ -576,8 +583,15 @@ const App: React.FC = () => {
                         <InputGroup
                             name="logoImageHeight"
                             type="number"
-                            min={5}
-                            inputRef={register({required: true, min: 5, setValueAs: (v: any) => Number(v) || 30})}
+                            min={0}
+                            inputRef={register({
+                                required: true,
+                                min: 0,
+                                setValueAs: (v: any) => {
+                                    const parsed = Number(v);
+                                    return Number.isFinite(parsed) && parsed >= 0 ? parsed : 30;
+                                },
+                            })}
                         />
                     </FormGroup>
                     <FormGroup label={__('Address font size (pt)', 'eccospro-easyticket')}>

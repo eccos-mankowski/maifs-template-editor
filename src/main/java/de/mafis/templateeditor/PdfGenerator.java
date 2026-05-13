@@ -201,6 +201,7 @@ public class PdfGenerator {
      * @param h the height of the image.
      */
     private static void renderImage(PDDocument doc, PDPageContentStream cs, JsonNode node, float x, float y, float w, float h) {
+        if (w <= 0 || h <= 0) return;
         if (!node.has("imageData") || node.get("imageData").isNull()) return;
 
         String base64 = node.get("imageData").asText();

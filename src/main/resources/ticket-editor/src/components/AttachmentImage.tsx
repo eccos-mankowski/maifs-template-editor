@@ -28,6 +28,10 @@ const AttachmentImage: React.FC<AttachmentImageProps> = ({
     const widthPx = Math.round(width);
     const heightPx = Math.round(height);
 
+    if (widthPx <= 0 || heightPx <= 0) {
+        return null;
+    }
+
     const isValidImageData =
         imageData &&
         imageData !== "null" &&

@@ -364,6 +364,9 @@ const CanvasRenderer: React.FC<CanvasRendererProps> = ({
       const draggable = Boolean(el.id && onElementPositionChange);
       const wPx = el.width * MM_TO_PX;
       const hPx = el.height * MM_TO_PX;
+      if (wPx <= 0 || hPx <= 0) {
+        return null;
+      }
       const hovered = hoveredId === el.id && !isDragging;
       return (
         <Group

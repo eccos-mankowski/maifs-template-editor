@@ -29,8 +29,8 @@ const A4_HEIGHT_MM = 297;
 const A5_WIDTH_MM = 148;
 const A5_HEIGHT_MM = 210;
 const MIN_CUSTOM_SIZE_MM = 10;
-const MIN_HEADER_IMAGE_HEIGHT_MM = 10;
-const MIN_LOGO_IMAGE_HEIGHT_MM = 5;
+const MIN_HEADER_IMAGE_HEIGHT_MM = 0;
+const MIN_LOGO_IMAGE_HEIGHT_MM = 0;
 const MIN_QR_CODE_SIZE_MM = 5;
 const DEFAULT_LOGO_WIDTH_MM = 55;
 const DEFAULT_LOGO_HEIGHT_MM = 30;
@@ -90,13 +90,17 @@ export function convertSettingsToTemplateDocument(
   const scaleX = documentSize.width / A4_WIDTH_MM;
   const scaleY = documentSize.height / A4_HEIGHT_MM;
   const elements: BaseElement[] = [];
+  const parsedHeaderImageHeight = Number(settings.headerImageHeight);
+  const parsedLogoImageHeight = Number(settings.logoImageHeight);
   const headerImageHeight = Math.max(
     MIN_HEADER_IMAGE_HEIGHT_MM,
-    Number(settings.headerImageHeight) || 95
+    Number.isFinite(parsedHeaderImageHeight) ? parsedHeaderImageHeight : 95
   );
   const logoImageHeight = Math.max(
     MIN_LOGO_IMAGE_HEIGHT_MM,
-    Number(settings.logoImageHeight) || DEFAULT_LOGO_HEIGHT_MM
+    Number.isFinite(parsedLogoImageHeight)
+      ? parsedLogoImageHeight
+      : DEFAULT_LOGO_HEIGHT_MM
   );
   const logoImageWidth =
     logoImageHeight * (DEFAULT_LOGO_WIDTH_MM / DEFAULT_LOGO_HEIGHT_MM);
@@ -106,16 +110,18 @@ export function convertSettingsToTemplateDocument(
   );
   // Header
   // Header image
-  elements.push(
-    new Image({
-      x: 0,
-      y: 0,
-      width: A4_WIDTH_MM * scaleX,
-      height: headerImageHeight,
-      imageData: getValidImageData(settings.headerImageData),
-      scaleToFit: true,
-    })
-  );
+  if (headerImageHeight > 0) {
+    elements.push(
+      new Image({
+        x: 0,
+        y: 0,
+        width: A4_WIDTH_MM * scaleX,
+        height: headerImageHeight,
+        imageData: getValidImageData(settings.headerImageData),
+        scaleToFit: true,
+      })
+    );
+  }
 
   // Content
   // Personal message
@@ -392,16 +398,18 @@ export function convertSettingsToTemplateDocument(
     scaleX,
     scaleY
   );
-  elements.push(
-    new Image({
-      id: 'logo',
-      x: logoPosition.x,
-      y: logoPosition.y,
-      width: logoImageWidth,
-      height: logoImageHeight,
-      imageData: getValidImageData(settings.logoImageData),
-    })
-  );
+  if (logoImageHeight > 0) {
+    elements.push(
+      new Image({
+        id: 'logo',
+        x: logoPosition.x,
+        y: logoPosition.y,
+        width: logoImageWidth,
+        height: logoImageHeight,
+        imageData: getValidImageData(settings.logoImageData),
+      })
+    );
+  }
 
   // Footer
   // Legal text

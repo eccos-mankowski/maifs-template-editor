@@ -15,8 +15,23 @@ export enum FooterLayout {
   ADDRESS_RIGHT_LOGO_LEFT = 2,
 }
 
+export enum TicketPageFormat {
+  A4 = 'A4',
+  A5 = 'A5',
+  CUSTOM = 'CUSTOM',
+}
+
+export interface ElementPosition {
+  x: number;
+  y: number;
+}
+
 export class Settings {
   public active: boolean = false;
+  public pageFormat: TicketPageFormat = TicketPageFormat.A4;
+  public customPageWidth: number = 210;
+  public customPageHeight: number = 297;
+  public elementPositions: Record<string, ElementPosition> = {};
   public headerImageData: string | null = null;
   public headerTitleBoxPosition: HeaderTitleBoxPosition =
     HeaderTitleBoxPosition.OVERLAP_HEADER_IMAGE;
@@ -43,6 +58,28 @@ export class Settings {
       return;
     }
     this.active = Boolean(obj.active);
+    this.pageFormat = Object.values(TicketPageFormat).includes(obj.pageFormat)
+      ? (obj.pageFormat as TicketPageFormat)
+      : this.pageFormat;
+    this.customPageWidth =
+      Number(obj.customPageWidth || this.customPageWidth) || this.customPageWidth;
+    this.customPageHeight =
+      Number(obj.customPageHeight || this.customPageHeight) || this.customPageHeight;
+    this.elementPositions =
+      obj.elementPositions && typeof obj.elementPositions === 'object'
+        ? Object.keys(obj.elementPositions).reduce(
+            (acc: Record<string, ElementPosition>, key: string) => {
+              const value = obj.elementPositions[key];
+              const x = Number(value?.x);
+              const y = Number(value?.y);
+              if (Number.isFinite(x) && Number.isFinite(y)) {
+                acc[key] = { x, y };
+              }
+              return acc;
+            },
+            {}
+          )
+        : {};
     this.headerImageData = String(obj.headerImageData) || obj.headerImageData;
     this.headerTitleBoxPosition = Object.values(
       HeaderTitleBoxPosition

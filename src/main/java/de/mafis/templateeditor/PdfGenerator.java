@@ -44,9 +44,13 @@ public class PdfGenerator {
             
             PDFont myFont = PDType0Font.load(document, new File("OpenSans-Regular.ttf"));
 
-            PDPage page = new PDPage(PDRectangle.A4);
+            float documentWidthMm = root.path("width").isNumber() ? (float) root.path("width").asDouble() : 210f;
+            float documentHeightMm = root.path("height").isNumber() ? (float) root.path("height").asDouble() : 297f;
+            float pageWidth = documentWidthMm * MM_TO_POINTS;
+            float pageHeight = documentHeightMm * MM_TO_POINTS;
+
+            PDPage page = new PDPage(new PDRectangle(pageWidth, pageHeight));
             document.addPage(page);
-            float pageHeight = PDRectangle.A4.getHeight();
             PDPageContentStream cs = new PDPageContentStream(document, page);
 
             for (JsonNode element : root.get("elements")) {

@@ -1,5 +1,5 @@
-import React, { Fragment } from 'react';
-import { Rect, Text as KonvaText } from 'react-konva';
+import React from 'react';
+import { Group, Rect, Text as KonvaText } from 'react-konva';
 import { Document } from '../model/document.class';
 import { TextBox } from '../model/text-box.class';
 import { Image } from '../model/image.class';
@@ -11,6 +11,7 @@ import { __ } from '../utils';
 
 export interface CanvasRendererProps {
   templateDocument: Document | null | undefined;
+  onElementPositionChange?: (id: string, x: number, y: number) => void;
 }
 
 function getKonvaTextDecoration(textDecoration: TextDecoration) {
@@ -42,16 +43,31 @@ const convertTextAlignToKonva = (textAlign: TextAlign) => {
 
 const CanvasRenderer: React.FC<CanvasRendererProps> = ({
   templateDocument: doc,
+  onElementPositionChange,
 }) => {
   const elements = doc?.elements.map((el, key) => {
     if (el instanceof TextBox) {
+      const draggable = Boolean(el.id && onElementPositionChange);
       return (
-        <Fragment key={'eltb' + key}>
+        <Group
+          key={'eltb' + key}
+          draggable={draggable}
+          x={el.x * MM_TO_PX}
+          y={el.y * MM_TO_PX}
+          onDragEnd={(event) => {
+            if (el.id && onElementPositionChange) {
+              const position = event.target.position();
+              onElementPositionChange(
+                el.id,
+                position.x / MM_TO_PX,
+                position.y / MM_TO_PX
+              );
+            }
+          }}
+        >
           {el.backgroundColor ? (
             <Rect
               key={'elr' + key}
-              x={el.x * MM_TO_PX}
-              y={el.y * MM_TO_PX}
               width={el.width * MM_TO_PX}
               height={el.height * MM_TO_PX}
               fill={el.backgroundColor || undefined}
@@ -59,8 +75,6 @@ const CanvasRenderer: React.FC<CanvasRendererProps> = ({
           ) : null}
           <KonvaText
             key={'elt' + key}
-            x={el.x * MM_TO_PX}
-            y={el.y * MM_TO_PX}
             width={el.width * MM_TO_PX}
             height={el.height * MM_TO_PX}
             text={el.text}
@@ -71,7 +85,7 @@ const CanvasRenderer: React.FC<CanvasRendererProps> = ({
             align={convertTextAlignToKonva(el.textAlign)}
             textDecoration={getKonvaTextDecoration(el.textDecoration)}
           />
-        </Fragment>
+        </Group>
       );
     } else if (el instanceof Image) {
       return (
@@ -94,6 +108,17 @@ const CanvasRenderer: React.FC<CanvasRendererProps> = ({
           width={el.width * MM_TO_PX}
           height={el.height * MM_TO_PX}
           fill="#000000"
+          draggable={Boolean(el.id && onElementPositionChange)}
+          onDragEnd={(event) => {
+            if (el.id && onElementPositionChange) {
+              const position = event.target.position();
+              onElementPositionChange(
+                el.id,
+                position.x / MM_TO_PX,
+                position.y / MM_TO_PX
+              );
+            }
+          }}
         />
       );
     } else {

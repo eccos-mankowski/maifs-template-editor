@@ -285,7 +285,7 @@ export function convertSettingsToTemplateDocument(
     })
   );
 
-  // Issue date
+  // Validity label and value
   const validityLabelPosition = getElementPosition(
     settings,
     'validity_label',
@@ -329,7 +329,7 @@ export function convertSettingsToTemplateDocument(
     })
   );
 
-  // Price rate
+  // Issue date label and value
   const issueDateLabelPosition = getElementPosition(
     settings,
     'issue_date_label',

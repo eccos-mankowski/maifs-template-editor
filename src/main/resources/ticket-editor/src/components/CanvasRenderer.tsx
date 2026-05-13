@@ -279,7 +279,6 @@ const CanvasRenderer: React.FC<CanvasRendererProps> = ({
             fontSize={el.fontSize * PT_TO_PX}
             fontFamily={el.fontFamily}
             fill={el.color}
-            padding={3 * MM_TO_PX}
             align={convertTextAlignToKonva(el.textAlign)}
             textDecoration={getKonvaTextDecoration(el.textDecoration)}
           />

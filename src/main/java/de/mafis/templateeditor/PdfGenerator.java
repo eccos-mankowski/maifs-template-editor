@@ -31,7 +31,6 @@ public class PdfGenerator {
     private static final float MM_TO_POINTS = 2.83465f;
     private static final float DEFAULT_PAGE_WIDTH_MM = 210f;
     private static final float DEFAULT_PAGE_HEIGHT_MM = 297f;
-    private static final float TEXT_PADDING_MM = 3f;
 
     /**
      * Generates a PDF from a JSON string.
@@ -135,11 +134,11 @@ public class PdfGenerator {
         if (id.equals("title") || id.equals("subtitle")) {
             currentY = y + (h / 2f) - (capHeight / 2f);
         } else {
-            float topPadding = TEXT_PADDING_MM * MM_TO_POINTS;
+            float topPadding = 0f;
             currentY = (y + h) - capHeight - topPadding;
         }
 
-        float horizontalPadding = TEXT_PADDING_MM * MM_TO_POINTS;
+        float horizontalPadding = 0f;
         String textAlign = node.path("textAlign").asText("L");
         for (String line : lines) {
             float textWidth = font.getStringWidth(line) / 1000 * fontSize;
@@ -176,7 +175,7 @@ public class PdfGenerator {
         Map<EncodeHintType, Object> hints = new HashMap<>();
         hints.put(EncodeHintType.MARGIN, 0); // Prevents unnecessary white border from the generator
 
-        BitMatrix bitMatrix = qrCodeWriter.encode(data, BarcodeFormat.QR_CODE, 200, 200, hints);
+        BitMatrix bitMatrix = qrCodeWriter.encode(data, BarcodeFormat.QR_CODE, 1, 1, hints);
         BufferedImage bufferedImage = MatrixToImageWriter.toBufferedImage(bitMatrix);
         PDImageXObject qrImage = LosslessFactory.createFromImage(doc, bufferedImage);
 

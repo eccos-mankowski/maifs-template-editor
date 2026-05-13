@@ -285,7 +285,7 @@ export function convertSettingsToTemplateDocument(
     })
   );
 
-  // Validity label and value
+  // Validity row
   const validityLabelPosition = getElementPosition(
     settings,
     'validity_label',
@@ -329,7 +329,7 @@ export function convertSettingsToTemplateDocument(
     })
   );
 
-  // Issue date label and value
+  // Issue date row
   const issueDateLabelPosition = getElementPosition(
     settings,
     'issue_date_label',
@@ -345,7 +345,7 @@ export function convertSettingsToTemplateDocument(
       y: issueDateLabelPosition.y,
       width: 65 * scaleX,
       height: 15 * scaleY,
-      text:  'Ausstellungsdatum:',
+      text: 'Ausstellungsdatum:',
       fontSize: 12,
       fontWeight: FontWeight.WEIGHT_REGULAR,
       color: settings.ticketTextBoxTextColor,

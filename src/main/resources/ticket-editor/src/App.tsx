@@ -24,9 +24,7 @@ import {Layer, Rect, Stage} from 'react-konva';
 import {__, convertSettingsToTemplateDocument} from './utils';
 import {
     ElementPosition,
-    FooterLayout,
     Settings,
-    TicketInfoBoxLayout,
     TicketPageFormat,
 } from './model/settings';
 import {TextAlign} from './model/text-align.enum';
@@ -155,16 +153,8 @@ const App: React.FC = () => {
             });
             // headerImageHeight is registered via inputRef in the JSX below
         } else if (activeTab === SettingsTab.CONTENT) {
-            register('ticketInfoBoxLayout', {
-                required: true,
-                setValueAs: (v) => v && Number(v),
-            });
-            // qrCodeSize, font sizes, personalMessage, voucherValue are registered via inputRef in the JSX below
+            // qrCodeSize and font sizes are registered via inputRef in the JSX below
         } else if (activeTab === SettingsTab.FOOTER) {
-            register('footerLayout', {
-                required: true,
-                setValueAs: (v) => v && Number(v),
-            });
             register('logoImageData', {
                 setValueAs: (v) => (v && String(v)),
             });
@@ -504,67 +494,6 @@ const App: React.FC = () => {
                             )}
                         />
                     </FormGroup>
-                    <FormGroup label={__('Personal message', 'eccospro-easyticket')}>
-                        <TextArea
-                            growVertically={true}
-                            large
-                            fill
-                            name="personalMessage"
-                            inputRef={register}
-                        />
-                    </FormGroup>
-                    <FormGroup label={__('Personal message font size (pt)', 'eccospro-easyticket')}>
-                        <InputGroup
-                            name="personalMessageFontSize"
-                            type="number"
-                            min={6}
-                            inputRef={register({required: true, min: 6, setValueAs: (v: any) => Number(v) || 11})}
-                        />
-                    </FormGroup>
-                    {renderTextAlignField(
-                        'personalMessageTextAlign',
-                        'Personal message text align'
-                    )}
-                    <FormGroup label={__('Voucher value', 'eccospro-easyticket')}>
-                        <InputGroup
-                            name="voucherValue"
-                            inputRef={register}
-                        />
-                    </FormGroup>
-                    <FormGroup label={__('Voucher value font size (pt)', 'eccospro-easyticket')}>
-                        <InputGroup
-                            name="voucherValueFontSize"
-                            type="number"
-                            min={6}
-                            inputRef={register({required: true, min: 6, setValueAs: (v: any) => Number(v) || 20})}
-                        />
-                    </FormGroup>
-                    {renderTextAlignField(
-                        'voucherValueTextAlign',
-                        'Voucher value text align'
-                    )}
-                    <FormGroup label={__('Code position', 'eccospro-easyticket')}>
-                        <Controller
-                            name="ticketInfoBoxLayout"
-                            control={control}
-                            render={({onChange, value, ref}) => (
-                                <RadioGroup
-                                    selectedValue={value && Number(value)}
-                                    onChange={onChange}
-                                    ref={ref}
-                                >
-                                    <Radio
-                                        label={__('Code left', 'eccospro-easyticket')}
-                                        value={TicketInfoBoxLayout.CODE_LEFT}
-                                    />
-                                    <Radio
-                                        label={__('Code right', 'eccospro-easyticket')}
-                                        value={TicketInfoBoxLayout.CODE_RIGHT}
-                                    />
-                                </RadioGroup>
-                            )}
-                        />
-                    </FormGroup>
                     <FormGroup label={__('QR code size (mm)', 'eccospro-easyticket')}>
                         <InputGroup
                             name="qrCodeSize"
@@ -627,25 +556,6 @@ const App: React.FC = () => {
         case SettingsTab.FOOTER:
             options = (
                 <>
-                    <FormGroup label={__('Footer layout', 'eccospro-easyticket')}>
-                        <Controller
-                            control={control}
-                            name="footerLayout"
-                            render={({onChange, value}) => (
-                                <RadioGroup
-                                    onChange={onChange}
-                                    selectedValue={value && Number(value)}
-                                >
-                                    <Radio value={FooterLayout.ADDRESS_LEFT_LOGO_RIGHT}>
-                                        {__('Address left, logo right', 'eccospro-easyticket')}
-                                    </Radio>
-                                    <Radio value={FooterLayout.ADDRESS_RIGHT_LOGO_LEFT}>
-                                        {__('Address right, logo left', 'eccospro-easyticket')}
-                                    </Radio>
-                                </RadioGroup>
-                            )}
-                        />
-                    </FormGroup>
                     <FormGroup label={__('Address', 'eccospro-easyticket')}>
                         <TextArea
                             growVertically={true}

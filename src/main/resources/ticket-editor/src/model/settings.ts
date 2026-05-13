@@ -1,4 +1,5 @@
 import { __ } from '../utils';
+import { TextAlign } from './text-align.enum';
 
 export enum HeaderTitleBoxPosition {
   OVERLAP_HEADER_IMAGE = 1,
@@ -34,6 +35,12 @@ function parseDimension(
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
+function parseTextAlign(value: unknown, fallback: TextAlign): TextAlign {
+  return Object.values(TextAlign).includes(value as TextAlign)
+    ? (value as TextAlign)
+    : fallback;
+}
+
 export class Settings {
   public active: boolean = false;
   public pageFormat: TicketPageFormat = TicketPageFormat.A4;
@@ -54,11 +61,19 @@ export class Settings {
   public ticketTextBoxTextColor: string = '#000000';
   public personalMessage: string = '';
   public personalMessageFontSize: number = 11;
+  public personalMessageTextAlign: TextAlign = TextAlign.ALIGN_LEFT;
   public voucherValue: string = '10 €';
   public voucherValueFontSize: number = 20;
+  public voucherValueTextAlign: TextAlign = TextAlign.ALIGN_CENTER;
   public validityFontSize: number = 12;
+  public validityFormattedTextAlign: TextAlign = TextAlign.ALIGN_LEFT;
+  public validityLabelTextAlign: TextAlign = TextAlign.ALIGN_LEFT;
+  public issueDateTextAlign: TextAlign = TextAlign.ALIGN_LEFT;
   public issueDateFontSize: number = 12;
+  public issueDateLabelTextAlign: TextAlign = TextAlign.ALIGN_LEFT;
+  public priceRateTextAlign: TextAlign = TextAlign.ALIGN_LEFT;
   public codeFontSize: number = 12;
+  public codeTextAlign: TextAlign = TextAlign.ALIGN_LEFT;
   public ticketInfoBoxLayout: TicketInfoBoxLayout =
     TicketInfoBoxLayout.CODE_LEFT;
   public footerLayout: FooterLayout = FooterLayout.ADDRESS_LEFT_LOGO_RIGHT;
@@ -67,7 +82,9 @@ export class Settings {
   public logoImageHeight: number = 30;
   public qrCodeSize: number = 35;
   public addressFontSize: number = 12;
+  public addressTextAlign: TextAlign = TextAlign.ALIGN_LEFT;
   public legalText: string = '';
+  public legalTextAlign: TextAlign = TextAlign.ALIGN_CENTER;
   public ticketAltText: string = '';
 
   constructor(obj: any) {
@@ -127,20 +144,49 @@ export class Settings {
       obj.personalMessageFontSize,
       this.personalMessageFontSize
     );
+    this.personalMessageTextAlign = parseTextAlign(
+      obj.personalMessageTextAlign,
+      this.personalMessageTextAlign
+    );
     this.voucherValue = String(obj.voucherValue ?? this.voucherValue);
     this.voucherValueFontSize = parseDimension(
       obj.voucherValueFontSize,
       this.voucherValueFontSize
     );
+    this.voucherValueTextAlign = parseTextAlign(
+      obj.voucherValueTextAlign,
+      this.voucherValueTextAlign
+    );
     this.validityFontSize = parseDimension(
       obj.validityFontSize,
       this.validityFontSize
+    );
+    this.validityFormattedTextAlign = parseTextAlign(
+      obj.validityFormattedTextAlign,
+      this.validityFormattedTextAlign
+    );
+    this.validityLabelTextAlign = parseTextAlign(
+      obj.validityLabelTextAlign,
+      this.validityLabelTextAlign
+    );
+    this.issueDateTextAlign = parseTextAlign(
+      obj.issueDateTextAlign,
+      this.issueDateTextAlign
     );
     this.issueDateFontSize = parseDimension(
       obj.issueDateFontSize,
       this.issueDateFontSize
     );
+    this.issueDateLabelTextAlign = parseTextAlign(
+      obj.issueDateLabelTextAlign,
+      this.issueDateLabelTextAlign
+    );
+    this.priceRateTextAlign = parseTextAlign(
+      obj.priceRateTextAlign,
+      this.priceRateTextAlign
+    );
     this.codeFontSize = parseDimension(obj.codeFontSize, this.codeFontSize);
+    this.codeTextAlign = parseTextAlign(obj.codeTextAlign, this.codeTextAlign);
     this.ticketInfoBoxLayout = Object.values(TicketInfoBoxLayout).includes(
       obj.ticketInfoBoxLayout
     )
@@ -160,7 +206,15 @@ export class Settings {
       obj.addressFontSize,
       this.addressFontSize
     );
+    this.addressTextAlign = parseTextAlign(
+      obj.addressTextAlign,
+      this.addressTextAlign
+    );
     this.legalText = String(obj.legalText || this.legalText);
+    this.legalTextAlign = parseTextAlign(
+      obj.legalTextAlign,
+      this.legalTextAlign
+    );
     this.ticketAltText = String(obj.ticketAltText || this.ticketAltText );
   }
 }

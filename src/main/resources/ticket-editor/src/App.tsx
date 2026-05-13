@@ -29,6 +29,7 @@ import {
     TicketInfoBoxLayout,
     TicketPageFormat,
 } from './model/settings';
+import {TextAlign} from './model/text-align.enum';
 import CanvasRenderer from './components/CanvasRenderer';
 import {
     getTicketSettings,
@@ -358,6 +359,29 @@ const App: React.FC = () => {
     }, [saveChanges, pendingSettingsId]);
 
     const watchedSettings = watch();
+    const renderTextAlignField = (
+        fieldName: keyof Settings,
+        label: string
+    ) => (
+        <FormGroup label={__(label, 'eccospro-easyticket')}>
+            <div className={Classes.HTML_SELECT}>
+                <select
+                    name={fieldName as string}
+                    ref={register}
+                >
+                    <option value={TextAlign.ALIGN_LEFT}>
+                        {__('Left', 'eccospro-easyticket')}
+                    </option>
+                    <option value={TextAlign.ALIGN_CENTER}>
+                        {__('Center', 'eccospro-easyticket')}
+                    </option>
+                    <option value={TextAlign.ALIGN_RIGHT}>
+                        {__('Right', 'eccospro-easyticket')}
+                    </option>
+                </select>
+            </div>
+        </FormGroup>
+    );
 
     let options = null;
     switch (activeTab) {
@@ -497,6 +521,10 @@ const App: React.FC = () => {
                             inputRef={register({required: true, min: 6, setValueAs: (v: any) => Number(v) || 11})}
                         />
                     </FormGroup>
+                    {renderTextAlignField(
+                        'personalMessageTextAlign',
+                        'Personal message text align'
+                    )}
                     <FormGroup label={__('Voucher value', 'eccospro-easyticket')}>
                         <InputGroup
                             name="voucherValue"
@@ -511,6 +539,10 @@ const App: React.FC = () => {
                             inputRef={register({required: true, min: 6, setValueAs: (v: any) => Number(v) || 20})}
                         />
                     </FormGroup>
+                    {renderTextAlignField(
+                        'voucherValueTextAlign',
+                        'Voucher value text align'
+                    )}
                     <FormGroup label={__('Code position', 'eccospro-easyticket')}>
                         <Controller
                             name="ticketInfoBoxLayout"
@@ -549,6 +581,18 @@ const App: React.FC = () => {
                             inputRef={register({required: true, min: 6, setValueAs: (v: any) => Number(v) || 12})}
                         />
                     </FormGroup>
+                    {renderTextAlignField(
+                        'validityFormattedTextAlign',
+                        'Validity description text align'
+                    )}
+                    {renderTextAlignField(
+                        'validityLabelTextAlign',
+                        'Validity label text align'
+                    )}
+                    {renderTextAlignField(
+                        'issueDateTextAlign',
+                        'Validity date text align'
+                    )}
                     <FormGroup label={__('Issue date font size (pt)', 'eccospro-easyticket')}>
                         <InputGroup
                             name="issueDateFontSize"
@@ -557,6 +601,14 @@ const App: React.FC = () => {
                             inputRef={register({required: true, min: 6, setValueAs: (v: any) => Number(v) || 12})}
                         />
                     </FormGroup>
+                    {renderTextAlignField(
+                        'issueDateLabelTextAlign',
+                        'Issue date label text align'
+                    )}
+                    {renderTextAlignField(
+                        'priceRateTextAlign',
+                        'Issue date value text align'
+                    )}
                     <FormGroup label={__('Code font size (pt)', 'eccospro-easyticket')}>
                         <InputGroup
                             name="codeFontSize"
@@ -565,6 +617,10 @@ const App: React.FC = () => {
                             inputRef={register({required: true, min: 6, setValueAs: (v: any) => Number(v) || 12})}
                         />
                     </FormGroup>
+                    {renderTextAlignField(
+                        'codeTextAlign',
+                        'Code text align'
+                    )}
                 </>
             );
             break;
@@ -631,9 +687,17 @@ const App: React.FC = () => {
                             inputRef={register({required: true, min: 6, setValueAs: (v: any) => Number(v) || 12})}
                         />
                     </FormGroup>
+                    {renderTextAlignField(
+                        'addressTextAlign',
+                        'Address text align'
+                    )}
                     <FormGroup label={__('Legal text', 'eccospro-easyticket')}>
                         <InputGroup name="legalText" inputRef={register}/>
                     </FormGroup>
+                    {renderTextAlignField(
+                        'legalTextAlign',
+                        'Legal text align'
+                    )}
                 </>
             );
             break;

@@ -31,6 +31,7 @@ public class PdfGenerator {
     private static final float MM_TO_POINTS = 2.83465f;
     private static final float DEFAULT_PAGE_WIDTH_MM = 210f;
     private static final float DEFAULT_PAGE_HEIGHT_MM = 297f;
+    private static final float TEXT_PADDING_MM = 3f;
 
     /**
      * Generates a PDF from a JSON string.
@@ -122,7 +123,7 @@ public class PdfGenerator {
         String rawText = node.path("text").asText("");
         if (rawText.trim().isEmpty()) return;
 
-        int fontSize = node.path("fontSize").asInt(11);
+        float fontSize = (float) node.path("fontSize").asDouble(11);
         cs.setNonStrokingColor(Color.decode(node.path("color").asText("#000000")));
         cs.setFont(font, fontSize);
 
@@ -134,16 +135,21 @@ public class PdfGenerator {
         if (id.equals("title") || id.equals("subtitle")) {
             currentY = y + (h / 2f) - (capHeight / 2f);
         } else {
-            float topPadding = 2.0f * MM_TO_POINTS;
+            float topPadding = TEXT_PADDING_MM * MM_TO_POINTS;
             currentY = (y + h) - capHeight - topPadding;
         }
 
+        float horizontalPadding = TEXT_PADDING_MM * MM_TO_POINTS;
+        String textAlign = node.path("textAlign").asText("L");
         for (String line : lines) {
             float textWidth = font.getStringWidth(line) / 1000 * fontSize;
-            float textX = x;
+            float textX = x + horizontalPadding;
+            float usableWidth = Math.max(0f, w - (2 * horizontalPadding));
 
-            if ("C".equals(node.path("textAlign").asText())) {
-                textX = x + (w - textWidth) / 2;
+            if ("C".equals(textAlign)) {
+                textX = x + horizontalPadding + (usableWidth - textWidth) / 2f;
+            } else if ("R".equals(textAlign)) {
+                textX = x + horizontalPadding + usableWidth - textWidth;
             }
 
             cs.beginText();
@@ -180,10 +186,7 @@ public class PdfGenerator {
         // Centering in the box
         float drawX = x + (w - size) / 2;
 
-        // OFFSET LOGIC:
-        float manualYOffset = -4f * MM_TO_POINTS; // Shifts it 4mm further down
-
-        float drawY = y + (h - size) / 2 + manualYOffset;
+        float drawY = y + (h - size) / 2;
 
         cs.drawImage(qrImage, drawX, drawY, size, size);
     }

@@ -137,6 +137,7 @@ export function convertSettingsToTemplateDocument(
       text: settings.personalMessage || __('Personal message demo text.', 'eccospro-reserve'),
       fontSize: settings.personalMessageFontSize,
       fontWeight: FontWeight.WEIGHT_REGULAR,
+      textAlign: settings.personalMessageTextAlign,
       color: settings.ticketTextBoxTextColor,
     })
   );
@@ -155,11 +156,12 @@ export function convertSettingsToTemplateDocument(
       id: 'voucher_value',
       x: voucherValuePosition.x,
       y: voucherValuePosition.y,
-      width: 180 * scaleX,
+      width: 45 * scaleX,
       height: 20 * scaleY,
       text: settings.voucherValue,
       fontSize: settings.voucherValueFontSize,
       fontWeight: FontWeight.WEIGHT_REGULAR,
+      textAlign: settings.voucherValueTextAlign,
       color: settings.ticketTextBoxTextColor,
     })
   );
@@ -223,6 +225,7 @@ export function convertSettingsToTemplateDocument(
       text: '',
       fontSize: settings.validityFontSize,
       fontWeight: FontWeight.WEIGHT_REGULAR,
+      textAlign: settings.validityFormattedTextAlign,
       color: settings.ticketTextBoxTextColor,
     })
   );
@@ -246,6 +249,7 @@ export function convertSettingsToTemplateDocument(
       text: 'Gültigkeit:',
       fontSize: settings.validityFontSize,
       fontWeight: FontWeight.WEIGHT_REGULAR,
+      textAlign: settings.validityLabelTextAlign,
       color: settings.ticketTextBoxTextColor,
     })
   );
@@ -267,6 +271,7 @@ export function convertSettingsToTemplateDocument(
       text: format(new Date(Date.now() + 86400000), 'P', { locale: deLocale }),
       fontSize: settings.validityFontSize,
       fontWeight: FontWeight.WEIGHT_REGULAR,
+      textAlign: settings.issueDateTextAlign,
       color: settings.ticketTextBoxTextColor,
     })
   );
@@ -290,6 +295,7 @@ export function convertSettingsToTemplateDocument(
       text: 'Ausstellungsdatum:',
       fontSize: settings.issueDateFontSize,
       fontWeight: FontWeight.WEIGHT_REGULAR,
+      textAlign: settings.issueDateLabelTextAlign,
       color: settings.ticketTextBoxTextColor,
     })
   );
@@ -311,6 +317,7 @@ export function convertSettingsToTemplateDocument(
       text: format(new Date(), 'P', { locale: deLocale }),
       fontSize: settings.issueDateFontSize,
       fontWeight: FontWeight.WEIGHT_REGULAR,
+      textAlign: settings.priceRateTextAlign,
       color: settings.ticketTextBoxTextColor,
     })
   );
@@ -334,6 +341,7 @@ export function convertSettingsToTemplateDocument(
       text: 'DEMO - DEMO - DEMO',
       fontSize: settings.codeFontSize,
       fontWeight: FontWeight.WEIGHT_REGULAR,
+      textAlign: settings.codeTextAlign,
       color: settings.ticketTextBoxTextColor,
     })
   );
@@ -370,6 +378,7 @@ export function convertSettingsToTemplateDocument(
       text: settings.address,
       fontSize: settings.addressFontSize,
       fontWeight: FontWeight.WEIGHT_REGULAR,
+      textAlign: settings.addressTextAlign,
       color: settings.ticketTextBoxTextColor,
     })
   );
@@ -416,7 +425,7 @@ export function convertSettingsToTemplateDocument(
         text: legalText,
         fontSize: 12,
         fontWeight: FontWeight.WEIGHT_REGULAR,
-        textAlign: TextAlign.ALIGN_CENTER,
+        textAlign: settings.legalTextAlign || TextAlign.ALIGN_CENTER,
         color: settings.ticketTextBoxTextColor,
       })
     );

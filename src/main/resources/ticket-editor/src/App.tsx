@@ -268,7 +268,7 @@ const App: React.FC = () => {
 
     const handleElementPositionChange = useCallback(
         (id: string, x: number, y: number) => {
-            const elementPositions = Object.assign({}, getValues('elementPositions') || {});
+            const elementPositions = {...(getValues('elementPositions') || {})};
             elementPositions[id] = {x, y} as ElementPosition;
             setValue('elementPositions', elementPositions, {
                 shouldDirty: true,

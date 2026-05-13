@@ -68,6 +68,8 @@ const CanvasRenderer: React.FC<CanvasRendererProps> = ({
           {el.backgroundColor ? (
             <Rect
               key={'elr' + key}
+              x={0}
+              y={0}
               width={el.width * MM_TO_PX}
               height={el.height * MM_TO_PX}
               fill={el.backgroundColor || undefined}
@@ -75,6 +77,8 @@ const CanvasRenderer: React.FC<CanvasRendererProps> = ({
           ) : null}
           <KonvaText
             key={'elt' + key}
+            x={0}
+            y={0}
             width={el.width * MM_TO_PX}
             height={el.height * MM_TO_PX}
             text={el.text}

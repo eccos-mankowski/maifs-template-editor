@@ -118,60 +118,12 @@ export function convertSettingsToTemplateDocument(
   );
 
   // Content
-  // Ticket text
-  const ticketTextPosition = getElementPosition(
-    settings,
-    'ticket_text',
-    15,
-    99,
-    scaleX,
-    scaleY
-  );
-  elements.push(
-    new TextBox({
-      id: 'ticket_text',
-      x: ticketTextPosition.x,
-      y: ticketTextPosition.y,
-      width: 180 * scaleX,
-      height: 55 * scaleY,
-      text: settings.ticketText,
-      fontSize: 11,
-      fontWeight: FontWeight.WEIGHT_REGULAR,
-      color: settings.ticketTextBoxTextColor,
-      backgroundColor: settings.ticketTextBoxBackgroundColor,
-    })
-  );
-
-    // Person Name
-  const personNamePosition = getElementPosition(
-    settings,
-    'person_name',
-    15,
-    156,
-    scaleX,
-    scaleY
-  );
-  elements.push(
-    new TextBox({
-      id: 'person_name',
-      x: personNamePosition.x,
-      y: personNamePosition.y,
-      width: 180 * scaleX,
-      height: 65 * scaleY,
-      text: __('Person name demo text.', 'eccospro-reserve'),
-      fontSize: 12,
-      fontWeight: FontWeight.WEIGHT_REGULAR,
-      color: settings.ticketTextBoxTextColor,
-      fitted: true,
-    })
-  );
-
-    // Personal message
+  // Personal message
   const personalMessagePosition = getElementPosition(
     settings,
     'personal_message',
     15,
-    162,
+    99,
     scaleX,
     scaleY
   );
@@ -181,12 +133,34 @@ export function convertSettingsToTemplateDocument(
       x: personalMessagePosition.x,
       y: personalMessagePosition.y,
       width: 180 * scaleX,
-      height: 65 * scaleY,
-      text: __('Personal message demo text.', 'eccospro-reserve'),
-      fontSize: 11,
+      height: 55 * scaleY,
+      text: settings.personalMessage || __('Personal message demo text.', 'eccospro-reserve'),
+      fontSize: settings.personalMessageFontSize,
       fontWeight: FontWeight.WEIGHT_REGULAR,
       color: settings.ticketTextBoxTextColor,
-      fitted: true,
+    })
+  );
+
+  // Voucher value
+  const voucherValuePosition = getElementPosition(
+    settings,
+    'voucher_value',
+    15,
+    157,
+    scaleX,
+    scaleY
+  );
+  elements.push(
+    new TextBox({
+      id: 'voucher_value',
+      x: voucherValuePosition.x,
+      y: voucherValuePosition.y,
+      width: 180 * scaleX,
+      height: 20 * scaleY,
+      text: settings.voucherValue,
+      fontSize: settings.voucherValueFontSize,
+      fontWeight: FontWeight.WEIGHT_REGULAR,
+      color: settings.ticketTextBoxTextColor,
     })
   );
 
@@ -247,7 +221,7 @@ export function convertSettingsToTemplateDocument(
       width: 95 * scaleX,
       height: 15 * scaleY,
       text: '',
-      fontSize: 12,
+      fontSize: settings.validityFontSize,
       fontWeight: FontWeight.WEIGHT_REGULAR,
       color: settings.ticketTextBoxTextColor,
     })
@@ -270,7 +244,7 @@ export function convertSettingsToTemplateDocument(
       width: 65 * scaleX,
       height: 15 * scaleY,
       text: 'Gültigkeit:',
-      fontSize: 12,
+      fontSize: settings.validityFontSize,
       fontWeight: FontWeight.WEIGHT_REGULAR,
       color: settings.ticketTextBoxTextColor,
     })
@@ -290,8 +264,8 @@ export function convertSettingsToTemplateDocument(
       y: issueDatePosition.y,
       width: 35 * scaleX,
       height: 15 * scaleY,
-      text: format(new Date(), 'P', { locale: deLocale }),
-      fontSize: 12,
+      text: format(new Date(Date.now() + 86400000), 'P', { locale: deLocale }),
+      fontSize: settings.validityFontSize,
       fontWeight: FontWeight.WEIGHT_REGULAR,
       color: settings.ticketTextBoxTextColor,
     })
@@ -314,7 +288,7 @@ export function convertSettingsToTemplateDocument(
       width: 65 * scaleX,
       height: 15 * scaleY,
       text: 'Ausstellungsdatum:',
-      fontSize: 12,
+      fontSize: settings.issueDateFontSize,
       fontWeight: FontWeight.WEIGHT_REGULAR,
       color: settings.ticketTextBoxTextColor,
     })
@@ -335,7 +309,7 @@ export function convertSettingsToTemplateDocument(
       width: 35 * scaleX,
       height: 15 * scaleY,
       text: format(new Date(), 'P', { locale: deLocale }),
-      fontSize: 12,
+      fontSize: settings.issueDateFontSize,
       fontWeight: FontWeight.WEIGHT_REGULAR,
       color: settings.ticketTextBoxTextColor,
     })
@@ -358,7 +332,7 @@ export function convertSettingsToTemplateDocument(
       width: 85 * scaleX,
       height: 15 * scaleY,
       text: 'DEMO - DEMO - DEMO',
-      fontSize: 12,
+      fontSize: settings.codeFontSize,
       fontWeight: FontWeight.WEIGHT_REGULAR,
       color: settings.ticketTextBoxTextColor,
     })
@@ -394,7 +368,7 @@ export function convertSettingsToTemplateDocument(
       width: 120 * scaleX,
       height: 30 * scaleY,
       text: settings.address,
-      fontSize: 12,
+      fontSize: settings.addressFontSize,
       fontWeight: FontWeight.WEIGHT_REGULAR,
       color: settings.ticketTextBoxTextColor,
     })

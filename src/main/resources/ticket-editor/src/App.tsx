@@ -152,17 +152,13 @@ const App: React.FC = () => {
             register('headerImageData', {
                 setValueAs: (v) => (v && String(v)) || null,
             });
-            register('headerImageHeight', {
-                setValueAs: (v) => Number(v) || 0,
-            });
+            // headerImageHeight is registered via inputRef in the JSX below
         } else if (activeTab === SettingsTab.CONTENT) {
             register('ticketInfoBoxLayout', {
                 required: true,
                 setValueAs: (v) => v && Number(v),
             });
-            register('qrCodeSize', {
-                setValueAs: (v) => Number(v) || 0,
-            });
+            // qrCodeSize, font sizes, personalMessage, voucherValue are registered via inputRef in the JSX below
         } else if (activeTab === SettingsTab.FOOTER) {
             register('footerLayout', {
                 required: true,
@@ -171,9 +167,7 @@ const App: React.FC = () => {
             register('logoImageData', {
                 setValueAs: (v) => (v && String(v)),
             });
-            register('logoImageHeight', {
-                setValueAs: (v) => Number(v) || 0,
-            });
+            // logoImageHeight and addressFontSize are registered via inputRef in the JSX below
         }
     }, [activeTab, register]);
 
@@ -468,7 +462,7 @@ const App: React.FC = () => {
                             name="headerImageHeight"
                             type="number"
                             min={10}
-                            inputRef={register({required: true, min: 10})}
+                            inputRef={register({required: true, min: 10, setValueAs: (v: any) => Number(v) || 95})}
                         />
                     </FormGroup>
                 </>
@@ -486,28 +480,35 @@ const App: React.FC = () => {
                             )}
                         />
                     </FormGroup>
-                    <FormGroup
-                        label={__('Text background color', 'eccospro-easyticket')}
-                    >
-                        <Controller
-                            control={control}
-                            name="ticketTextBoxBackgroundColor"
-                            render={({onChange, value}) => (
-                                <ColorPicker
-                                    onChange={onChange}
-                                    value={value}
-                                    allowTransparent
-                                />
-                            )}
-                        />
-                    </FormGroup>
-                    <FormGroup label={__('Ticket text', 'eccospro-easyticket')}>
+                    <FormGroup label={__('Personal message', 'eccospro-easyticket')}>
                         <TextArea
                             growVertically={true}
                             large
                             fill
-                            name="ticketText"
+                            name="personalMessage"
                             inputRef={register}
+                        />
+                    </FormGroup>
+                    <FormGroup label={__('Personal message font size (pt)', 'eccospro-easyticket')}>
+                        <InputGroup
+                            name="personalMessageFontSize"
+                            type="number"
+                            min={6}
+                            inputRef={register({required: true, min: 6, setValueAs: (v: any) => Number(v) || 11})}
+                        />
+                    </FormGroup>
+                    <FormGroup label={__('Voucher value', 'eccospro-easyticket')}>
+                        <InputGroup
+                            name="voucherValue"
+                            inputRef={register}
+                        />
+                    </FormGroup>
+                    <FormGroup label={__('Voucher value font size (pt)', 'eccospro-easyticket')}>
+                        <InputGroup
+                            name="voucherValueFontSize"
+                            type="number"
+                            min={6}
+                            inputRef={register({required: true, min: 6, setValueAs: (v: any) => Number(v) || 20})}
                         />
                     </FormGroup>
                     <FormGroup label={__('Code position', 'eccospro-easyticket')}>
@@ -537,7 +538,31 @@ const App: React.FC = () => {
                             name="qrCodeSize"
                             type="number"
                             min={5}
-                            inputRef={register({required: true, min: 5})}
+                            inputRef={register({required: true, min: 5, setValueAs: (v: any) => Number(v) || 35})}
+                        />
+                    </FormGroup>
+                    <FormGroup label={__('Validity font size (pt)', 'eccospro-easyticket')}>
+                        <InputGroup
+                            name="validityFontSize"
+                            type="number"
+                            min={6}
+                            inputRef={register({required: true, min: 6, setValueAs: (v: any) => Number(v) || 12})}
+                        />
+                    </FormGroup>
+                    <FormGroup label={__('Issue date font size (pt)', 'eccospro-easyticket')}>
+                        <InputGroup
+                            name="issueDateFontSize"
+                            type="number"
+                            min={6}
+                            inputRef={register({required: true, min: 6, setValueAs: (v: any) => Number(v) || 12})}
+                        />
+                    </FormGroup>
+                    <FormGroup label={__('Code font size (pt)', 'eccospro-easyticket')}>
+                        <InputGroup
+                            name="codeFontSize"
+                            type="number"
+                            min={6}
+                            inputRef={register({required: true, min: 6, setValueAs: (v: any) => Number(v) || 12})}
                         />
                     </FormGroup>
                 </>
@@ -595,7 +620,15 @@ const App: React.FC = () => {
                             name="logoImageHeight"
                             type="number"
                             min={5}
-                            inputRef={register({required: true, min: 5})}
+                            inputRef={register({required: true, min: 5, setValueAs: (v: any) => Number(v) || 30})}
+                        />
+                    </FormGroup>
+                    <FormGroup label={__('Address font size (pt)', 'eccospro-easyticket')}>
+                        <InputGroup
+                            name="addressFontSize"
+                            type="number"
+                            min={6}
+                            inputRef={register({required: true, min: 6, setValueAs: (v: any) => Number(v) || 12})}
                         />
                     </FormGroup>
                     <FormGroup label={__('Legal text', 'eccospro-easyticket')}>

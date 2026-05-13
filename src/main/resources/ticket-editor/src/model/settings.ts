@@ -52,8 +52,13 @@ export class Settings {
     'eccospro-easyticket'
   );
   public ticketTextBoxTextColor: string = '#000000';
-  public ticketTextBoxBackgroundColor: string = '';
-  public ticketText: string = '';
+  public personalMessage: string = '';
+  public personalMessageFontSize: number = 11;
+  public voucherValue: string = '10 €';
+  public voucherValueFontSize: number = 20;
+  public validityFontSize: number = 12;
+  public issueDateFontSize: number = 12;
+  public codeFontSize: number = 12;
   public ticketInfoBoxLayout: TicketInfoBoxLayout =
     TicketInfoBoxLayout.CODE_LEFT;
   public footerLayout: FooterLayout = FooterLayout.ADDRESS_LEFT_LOGO_RIGHT;
@@ -61,6 +66,7 @@ export class Settings {
   public logoImageData: string | null = null;
   public logoImageHeight: number = 30;
   public qrCodeSize: number = 35;
+  public addressFontSize: number = 12;
   public legalText: string = '';
   public ticketAltText: string = '';
 
@@ -108,18 +114,33 @@ export class Settings {
     this.headerTitleBoxTextColor = String(
       obj.headerTitleBoxTextColor || this.headerTitleBoxTextColor
     );
+    this.headerTitleBoxBackgroundColor = String(
+      obj.headerTitleBoxBackgroundColor || this.headerTitleBoxBackgroundColor
+    );
     this.headerTitle = String(obj.headerTitle || this.headerTitle);
     this.headerSubtitle = String(obj.headerSubtitle || this.headerSubtitle);
     this.ticketTextBoxTextColor = String(
       obj.ticketTextBoxTextColor || this.ticketTextBoxTextColor
     );
-    this.headerTitleBoxBackgroundColor = String(
-      obj.headerTitleBoxBackgroundColor || this.headerTitleBoxBackgroundColor
+    this.personalMessage = String(obj.personalMessage ?? this.personalMessage);
+    this.personalMessageFontSize = parseDimension(
+      obj.personalMessageFontSize,
+      this.personalMessageFontSize
     );
-    this.ticketTextBoxBackgroundColor = String(
-      obj.ticketTextBoxBackgroundColor || this.ticketTextBoxBackgroundColor
+    this.voucherValue = String(obj.voucherValue ?? this.voucherValue);
+    this.voucherValueFontSize = parseDimension(
+      obj.voucherValueFontSize,
+      this.voucherValueFontSize
     );
-    this.ticketText = String(obj.ticketText || this.ticketText);
+    this.validityFontSize = parseDimension(
+      obj.validityFontSize,
+      this.validityFontSize
+    );
+    this.issueDateFontSize = parseDimension(
+      obj.issueDateFontSize,
+      this.issueDateFontSize
+    );
+    this.codeFontSize = parseDimension(obj.codeFontSize, this.codeFontSize);
     this.ticketInfoBoxLayout = Object.values(TicketInfoBoxLayout).includes(
       obj.ticketInfoBoxLayout
     )
@@ -129,12 +150,16 @@ export class Settings {
       ? (obj.footerLayout as FooterLayout)
       : this.footerLayout;
     this.address = String(obj.address || this.address);
-    this.logoImageData = String(this.logoImageData) || obj.logoImageData;
+    this.logoImageData = (obj.logoImageData && String(obj.logoImageData)) || null;
     this.logoImageHeight = parseDimension(
       obj.logoImageHeight,
       this.logoImageHeight
     );
     this.qrCodeSize = parseDimension(obj.qrCodeSize, this.qrCodeSize);
+    this.addressFontSize = parseDimension(
+      obj.addressFontSize,
+      this.addressFontSize
+    );
     this.legalText = String(obj.legalText || this.legalText);
     this.ticketAltText = String(obj.ticketAltText || this.ticketAltText );
   }

@@ -32,6 +32,7 @@ const HOVER_BORDER_COLOR = '#137cbd';
 
 type GuideLine = {
   points: number[];
+  dashed?: boolean;
 };
 
 type Bounds = {
@@ -89,8 +90,9 @@ const CanvasRenderer: React.FC<CanvasRendererProps> = ({
   };
 
   /**
-   * Compute snap position and a single horizontal helper guide to align height
-   * with the nearest/most similar element.
+   * Compute snap position and helper guides:
+   * - dashed guides for element-to-element alignment
+   * - solid guides for page-center alignment
    */
   const getSnappedPosition = (
     id: string | undefined,
@@ -145,12 +147,20 @@ const CanvasRenderer: React.FC<CanvasRendererProps> = ({
     });
 
     const lines: GuideLine[] = [];
+    const docWidthPx = (doc?.width || 0) * MM_TO_PX;
+    const docHeightPx = (doc?.height || 0) * MM_TO_PX;
     const snappedTop = snappedY;
     const snappedCenter = snappedY + height / 2;
     const snappedBottom = snappedY + height;
-    let bestGuide: GuideLine | null = null;
-    let bestGuideDiff = Number.POSITIVE_INFINITY;
-    let bestGuideNearness = Number.POSITIVE_INFINITY;
+    const snappedLeft = snappedX;
+    const snappedMiddle = snappedX + width / 2;
+    const snappedRight = snappedX + width;
+    let bestHorizontalGuide: GuideLine | null = null;
+    let bestHorizontalGuideDiff = Number.POSITIVE_INFINITY;
+    let bestHorizontalGuideNearness = Number.POSITIVE_INFINITY;
+    let bestVerticalGuide: GuideLine | null = null;
+    let bestVerticalGuideDiff = Number.POSITIVE_INFINITY;
+    let bestVerticalGuideNearness = Number.POSITIVE_INFINITY;
 
     otherBounds.forEach((other) => {
       const otherTop = other.y;
@@ -169,26 +179,79 @@ const CanvasRenderer: React.FC<CanvasRendererProps> = ({
             snappedX + width / 2 - (other.x + other.width / 2)
           );
           if (
-            diff < bestGuideDiff ||
-            (diff === bestGuideDiff && nearness < bestGuideNearness)
+            diff < bestHorizontalGuideDiff ||
+            (diff === bestHorizontalGuideDiff &&
+              nearness < bestHorizontalGuideNearness)
           ) {
-            bestGuideDiff = diff;
-            bestGuideNearness = nearness;
-            bestGuide = {
+            bestHorizontalGuideDiff = diff;
+            bestHorizontalGuideNearness = nearness;
+            bestHorizontalGuide = {
               points: [
                 Math.min(snappedX, other.x),
                 otherLine,
                 Math.max(snappedX + width, other.x + other.width),
                 otherLine,
               ],
+              dashed: true,
+            };
+          }
+        });
+      });
+
+      const otherLeft = other.x;
+      const otherMiddle = other.x + other.width / 2;
+      const otherRight = other.x + other.width;
+      const otherVerticals = [otherLeft, otherMiddle, otherRight];
+      const draggedVerticals = [snappedLeft, snappedMiddle, snappedRight];
+
+      draggedVerticals.forEach((draggedLine) => {
+        otherVerticals.forEach((otherLine) => {
+          const diff = Math.abs(draggedLine - otherLine);
+          if (diff > SNAP_TOLERANCE_PX * 2) {
+            return;
+          }
+          const nearness = Math.abs(
+            snappedY + height / 2 - (other.y + other.height / 2)
+          );
+          if (
+            diff < bestVerticalGuideDiff ||
+            (diff === bestVerticalGuideDiff &&
+              nearness < bestVerticalGuideNearness)
+          ) {
+            bestVerticalGuideDiff = diff;
+            bestVerticalGuideNearness = nearness;
+            bestVerticalGuide = {
+              points: [
+                otherLine,
+                Math.min(snappedY, other.y),
+                otherLine,
+                Math.max(snappedY + height, other.y + other.height),
+              ],
+              dashed: true,
             };
           }
         });
       });
     });
 
-    if (bestGuide) {
-      lines.push(bestGuide);
+    if (bestHorizontalGuide) {
+      lines.push(bestHorizontalGuide);
+    }
+    if (bestVerticalGuide) {
+      lines.push(bestVerticalGuide);
+    }
+
+    const docCenterX = docWidthPx / 2;
+    const docCenterY = docHeightPx / 2;
+    if (Math.abs(snappedMiddle - docCenterX) <= SNAP_TOLERANCE_PX) {
+      lines.push({
+        points: [docCenterX, 0, docCenterX, docHeightPx],
+      });
+    }
+    if (Math.abs(snappedCenter - docCenterY) <= SNAP_TOLERANCE_PX) {
+      lines.push({
+        points: [0, docCenterY, docWidthPx, docCenterY],
+      });
     }
 
     setGuideLines(lines);
@@ -386,7 +449,7 @@ const CanvasRenderer: React.FC<CanvasRendererProps> = ({
           points={line.points}
           stroke={GUIDE_COLOR}
           strokeWidth={1}
-          dash={[6, 6]}
+          dash={line.dashed ? [6, 6] : undefined}
           listening={false}
         />
       ))}

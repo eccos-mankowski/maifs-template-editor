@@ -26,6 +26,14 @@ export interface ElementPosition {
   y: number;
 }
 
+function parseDimension(
+  value: unknown,
+  fallback: number
+): number {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
 export class Settings {
   public active: boolean = false;
   public pageFormat: TicketPageFormat = TicketPageFormat.A4;
@@ -61,10 +69,14 @@ export class Settings {
     this.pageFormat = Object.values(TicketPageFormat).includes(obj.pageFormat)
       ? (obj.pageFormat as TicketPageFormat)
       : this.pageFormat;
-    this.customPageWidth =
-      Number(obj.customPageWidth || this.customPageWidth) || this.customPageWidth;
-    this.customPageHeight =
-      Number(obj.customPageHeight || this.customPageHeight) || this.customPageHeight;
+    this.customPageWidth = parseDimension(
+      obj.customPageWidth,
+      this.customPageWidth
+    );
+    this.customPageHeight = parseDimension(
+      obj.customPageHeight,
+      this.customPageHeight
+    );
     this.elementPositions =
       obj.elementPositions && typeof obj.elementPositions === 'object'
         ? Object.keys(obj.elementPositions).reduce(

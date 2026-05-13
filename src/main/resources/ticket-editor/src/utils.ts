@@ -36,11 +36,16 @@ function getDocumentSize(settings: Settings) {
     return { width: A5_WIDTH_MM, height: A5_HEIGHT_MM };
   }
   if (settings.pageFormat === TicketPageFormat.CUSTOM) {
+    const customWidth = Number(settings.customPageWidth);
+    const customHeight = Number(settings.customPageHeight);
     return {
-      width: Math.max(MIN_CUSTOM_SIZE_MM, Number(settings.customPageWidth) || A4_WIDTH_MM),
+      width: Math.max(
+        MIN_CUSTOM_SIZE_MM,
+        Number.isFinite(customWidth) ? customWidth : A4_WIDTH_MM
+      ),
       height: Math.max(
         MIN_CUSTOM_SIZE_MM,
-        Number(settings.customPageHeight) || A4_HEIGHT_MM
+        Number.isFinite(customHeight) ? customHeight : A4_HEIGHT_MM
       ),
     };
   }

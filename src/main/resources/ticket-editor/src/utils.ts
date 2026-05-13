@@ -4,6 +4,7 @@ import {
   FooterLayout,
   HeaderTitleBoxPosition,
   Settings,
+  TicketPageFormat,
   TicketInfoBoxLayout,
 } from './model/settings';
 import { TextBox } from './model/text-box.class';
@@ -24,6 +25,55 @@ function getValidImageData(data: string | null | undefined): string | null {
     return data;
 }
 
+const A4_WIDTH_MM = 210;
+const A4_HEIGHT_MM = 297;
+const A5_WIDTH_MM = 148;
+const A5_HEIGHT_MM = 210;
+const MIN_CUSTOM_SIZE_MM = 10;
+
+function getDocumentSize(settings: Settings) {
+  if (settings.pageFormat === TicketPageFormat.A5) {
+    return { width: A5_WIDTH_MM, height: A5_HEIGHT_MM };
+  }
+  if (settings.pageFormat === TicketPageFormat.CUSTOM) {
+    const customWidth = Number(settings.customPageWidth);
+    const customHeight = Number(settings.customPageHeight);
+    return {
+      width: Math.max(
+        MIN_CUSTOM_SIZE_MM,
+        Number.isFinite(customWidth) ? customWidth : A4_WIDTH_MM
+      ),
+      height: Math.max(
+        MIN_CUSTOM_SIZE_MM,
+        Number.isFinite(customHeight) ? customHeight : A4_HEIGHT_MM
+      ),
+    };
+  }
+  return { width: A4_WIDTH_MM, height: A4_HEIGHT_MM };
+}
+
+function getElementPosition(
+  settings: Settings,
+  id: string,
+  x: number,
+  y: number,
+  scaleX: number,
+  scaleY: number
+) {
+  const customPosition = settings.elementPositions[id];
+  if (
+    customPosition &&
+    Number.isFinite(customPosition.x) &&
+    Number.isFinite(customPosition.y)
+  ) {
+    return customPosition;
+  }
+  return {
+    x: x * scaleX,
+    y: y * scaleY,
+  };
+}
+
 /**
  * Function converts a settings object to a template document.
  * @param settings Specifies the settings object.
@@ -32,6 +82,9 @@ function getValidImageData(data: string | null | undefined): string | null {
 export function convertSettingsToTemplateDocument(
   settings: Settings
 ): Document {
+  const documentSize = getDocumentSize(settings);
+  const scaleX = documentSize.width / A4_WIDTH_MM;
+  const scaleY = documentSize.height / A4_HEIGHT_MM;
   const elements: BaseElement[] = [];
   // Header
   // Header image
@@ -39,8 +92,8 @@ export function convertSettingsToTemplateDocument(
     new Image({
       x: 0,
       y: 0,
-      width: 210,
-      height: 95,
+      width: A4_WIDTH_MM * scaleX,
+      height: 95 * scaleY,
       imageData: getValidImageData(settings.headerImageData),
       scaleToFit: true,
     })
@@ -53,13 +106,21 @@ export function convertSettingsToTemplateDocument(
   ) {
     headerTextAddend = 40;
   }
+  const titlePosition = getElementPosition(
+    settings,
+    'title',
+    25,
+    60 + headerTextAddend,
+    scaleX,
+    scaleY
+  );
   elements.push(
     new TextBox({
       id: 'title',
-      x: 25,
-      y: 60 + headerTextAddend,
-      width: 160,
-      height: 20,
+      x: titlePosition.x,
+      y: titlePosition.y,
+      width: 160 * scaleX,
+      height: 20 * scaleY,
       text: settings.headerTitle,
       fontSize: 48,
       textAlign: TextAlign.ALIGN_CENTER,
@@ -69,13 +130,21 @@ export function convertSettingsToTemplateDocument(
     })
   );
   // Header subtitle
+  const subtitlePosition = getElementPosition(
+    settings,
+    'subtitle',
+    25,
+    80 + headerTextAddend,
+    scaleX,
+    scaleY
+  );
   elements.push(
     new TextBox({
       id: 'subtitle',
-      x: 25,
-      y: 80 + headerTextAddend,
-      width: 160,
-      height: 15,
+      x: subtitlePosition.x,
+      y: subtitlePosition.y,
+      width: 160 * scaleX,
+      height: 15 * scaleY,
       text: settings.headerSubtitle,
       fontSize: 18,
       textAlign: TextAlign.ALIGN_CENTER,
@@ -87,13 +156,21 @@ export function convertSettingsToTemplateDocument(
 
   // Content
   // Ticket text
+  const ticketTextPosition = getElementPosition(
+    settings,
+    'ticket_text',
+    15,
+    99 + headerTextAddend,
+    scaleX,
+    scaleY
+  );
   elements.push(
     new TextBox({
       id: 'ticket_text',
-      x: 15,
-      y: 99 + headerTextAddend,
-      width: 180,
-      height: 55 - headerTextAddend,
+      x: ticketTextPosition.x,
+      y: ticketTextPosition.y,
+      width: 180 * scaleX,
+      height: (55 - headerTextAddend) * scaleY,
       text: settings.ticketText,
       fontSize: 11,
       fontWeight: FontWeight.WEIGHT_REGULAR,
@@ -103,36 +180,52 @@ export function convertSettingsToTemplateDocument(
   );
 
     // Person Name
-    elements.push(
-        new TextBox({
-            id: 'person_name',
-            x: 15,
-            y: 156,
-            width: 180,
-            height: 65,
-            text: __('Person name demo text.', 'eccospro-reserve'),
-            fontSize: 12,
-            fontWeight: FontWeight.WEIGHT_REGULAR,
-            color: settings.ticketTextBoxTextColor,
-            fitted: true,
-        })
-    );
+  const personNamePosition = getElementPosition(
+    settings,
+    'person_name',
+    15,
+    156,
+    scaleX,
+    scaleY
+  );
+  elements.push(
+    new TextBox({
+      id: 'person_name',
+      x: personNamePosition.x,
+      y: personNamePosition.y,
+      width: 180 * scaleX,
+      height: 65 * scaleY,
+      text: __('Person name demo text.', 'eccospro-reserve'),
+      fontSize: 12,
+      fontWeight: FontWeight.WEIGHT_REGULAR,
+      color: settings.ticketTextBoxTextColor,
+      fitted: true,
+    })
+  );
 
     // Personal message
-    elements.push(
-        new TextBox({
-            id: 'personal_message',
-            x: 15,
-            y: 162,
-            width: 180,
-            height: 65,
-            text: __('Personal message demo text.', 'eccospro-reserve'),
-            fontSize: 11,
-            fontWeight: FontWeight.WEIGHT_REGULAR,
-            color: settings.ticketTextBoxTextColor,
-            fitted: true,
-        })
-    );
+  const personalMessagePosition = getElementPosition(
+    settings,
+    'personal_message',
+    15,
+    162,
+    scaleX,
+    scaleY
+  );
+  elements.push(
+    new TextBox({
+      id: 'personal_message',
+      x: personalMessagePosition.x,
+      y: personalMessagePosition.y,
+      width: 180 * scaleX,
+      height: 65 * scaleY,
+      text: __('Personal message demo text.', 'eccospro-reserve'),
+      fontSize: 11,
+      fontWeight: FontWeight.WEIGHT_REGULAR,
+      color: settings.ticketTextBoxTextColor,
+      fitted: true,
+    })
+  );
 
   // QR Code + date + price_rate + code
   let codeX = 0;
@@ -155,25 +248,41 @@ export function convertSettingsToTemplateDocument(
   }
 
   // QR code
+  const qrCodePosition = getElementPosition(
+    settings,
+    'qr_code',
+    codeX,
+    198,
+    scaleX,
+    scaleY
+  );
   elements.push(
     new QrCode({
       id: 'qr_code',
-      x: codeX,
-      y: 198,
-      width: 35,
-      height: 35,
+      x: qrCodePosition.x,
+      y: qrCodePosition.y,
+      width: 35 * scaleX,
+      height: 35 * scaleY,
       data: '',
     })
   );
 
   // Product description
+  const validityFormattedPosition = getElementPosition(
+    settings,
+    'validity_formatted',
+    dateX,
+    198,
+    scaleX,
+    scaleY
+  );
   elements.push(
     new TextBox({
       id: 'validity_formatted',
-      x: dateX,
-      y: 198,
-      width: 95,
-      height: 15,
+      x: validityFormattedPosition.x,
+      y: validityFormattedPosition.y,
+      width: 95 * scaleX,
+      height: 15 * scaleY,
       text: '',
       fontSize: 12,
       fontWeight: FontWeight.WEIGHT_REGULAR,
@@ -181,26 +290,43 @@ export function convertSettingsToTemplateDocument(
     })
   );
 
-  // Issue date
+  // Validity row
+  const validityLabelPosition = getElementPosition(
+    settings,
+    'validity_label',
+    dateX,
+    208,
+    scaleX,
+    scaleY
+  );
   elements.push(
     new TextBox({
-      x: dateX,
-      y: 208,
-      width: 65,
-      height: 15,
+      id: 'validity_label',
+      x: validityLabelPosition.x,
+      y: validityLabelPosition.y,
+      width: 65 * scaleX,
+      height: 15 * scaleY,
       text: 'Gültigkeit:',
       fontSize: 12,
       fontWeight: FontWeight.WEIGHT_REGULAR,
       color: settings.ticketTextBoxTextColor,
     })
   );
+  const issueDatePosition = getElementPosition(
+    settings,
+    'issue_date',
+    dateX + 65,
+    208,
+    scaleX,
+    scaleY
+  );
   elements.push(
     new TextBox({
       id: 'issue_date',
-      x: dateX + 65,
-      y: 208,
-      width: 35,
-      height: 15,
+      x: issueDatePosition.x,
+      y: issueDatePosition.y,
+      width: 35 * scaleX,
+      height: 15 * scaleY,
       text: format(new Date(), 'P', { locale: deLocale }),
       fontSize: 12,
       fontWeight: FontWeight.WEIGHT_REGULAR,
@@ -208,26 +334,43 @@ export function convertSettingsToTemplateDocument(
     })
   );
 
-  // Price rate
+  // Issue date row
+  const issueDateLabelPosition = getElementPosition(
+    settings,
+    'issue_date_label',
+    priceRateX,
+    218,
+    scaleX,
+    scaleY
+  );
   elements.push(
     new TextBox({
-      x: priceRateX,
-      y: 218,
-      width: 65,
-      height: 15,
-      text:  'Ausstellungsdatum:',
+      id: 'issue_date_label',
+      x: issueDateLabelPosition.x,
+      y: issueDateLabelPosition.y,
+      width: 65 * scaleX,
+      height: 15 * scaleY,
+      text: 'Ausstellungsdatum:',
       fontSize: 12,
       fontWeight: FontWeight.WEIGHT_REGULAR,
       color: settings.ticketTextBoxTextColor,
     })
   );
+  const priceRatePosition = getElementPosition(
+    settings,
+    'price_rate',
+    priceRateX + 65,
+    218,
+    scaleX,
+    scaleY
+  );
   elements.push(
     new TextBox({
       id: 'price_rate',
-      x: priceRateX + 65,
-      y: 218,
-      width: 35,
-      height: 15,
+      x: priceRatePosition.x,
+      y: priceRatePosition.y,
+      width: 35 * scaleX,
+      height: 15 * scaleY,
       text: format(new Date(), 'P', { locale: deLocale }),
       fontSize: 12,
       fontWeight: FontWeight.WEIGHT_REGULAR,
@@ -236,13 +379,21 @@ export function convertSettingsToTemplateDocument(
   );
 
   // Code in text format
+  const codePosition = getElementPosition(
+    settings,
+    'code',
+    textCodeX,
+    228,
+    scaleX,
+    scaleY
+  );
   elements.push(
     new TextBox({
       id: 'code',
-      x: textCodeX,
-      y: 228,
-      width: 85,
-      height: 15,
+      x: codePosition.x,
+      y: codePosition.y,
+      width: 85 * scaleX,
+      height: 15 * scaleY,
       text: 'DEMO - DEMO - DEMO',
       fontSize: 12,
       fontWeight: FontWeight.WEIGHT_REGULAR,
@@ -264,12 +415,21 @@ export function convertSettingsToTemplateDocument(
   }
 
   // Address
+  const addressPosition = getElementPosition(
+    settings,
+    'address',
+    addressX,
+    255,
+    scaleX,
+    scaleY
+  );
   elements.push(
     new TextBox({
-      x: addressX,
-      y: 255,
-      width: 120,
-      height: 30,
+      id: 'address',
+      x: addressPosition.x,
+      y: addressPosition.y,
+      width: 120 * scaleX,
+      height: 30 * scaleY,
       text: settings.address,
       fontSize: 12,
       fontWeight: FontWeight.WEIGHT_REGULAR,
@@ -280,10 +440,10 @@ export function convertSettingsToTemplateDocument(
   // Logo
   elements.push(
     new Image({
-      x: logoX,
-      y: 250,
-      width: 55,
-      height: 30,
+      x: logoX * scaleX,
+      y: 250 * scaleY,
+      width: 55 * scaleX,
+      height: 30 * scaleY,
       imageData: getValidImageData(settings.logoImageData),
     })
   );
@@ -292,12 +452,21 @@ export function convertSettingsToTemplateDocument(
   // Legal text
   const legalText = settings.legalText.trim();
   if (legalText) {
+    const legalTextPosition = getElementPosition(
+      settings,
+      'legal_text',
+      12,
+      285,
+      scaleX,
+      scaleY
+    );
     elements.push(
       new TextBox({
-        x: 12,
-        y: 285,
-        width: 186,
-        height: 10,
+        id: 'legal_text',
+        x: legalTextPosition.x,
+        y: legalTextPosition.y,
+        width: 186 * scaleX,
+        height: 10 * scaleY,
         text: legalText,
         fontSize: 12,
         fontWeight: FontWeight.WEIGHT_REGULAR,
@@ -306,7 +475,11 @@ export function convertSettingsToTemplateDocument(
       })
     );
   }
-  return new Document({ elements });
+  return new Document({
+    width: documentSize.width,
+    height: documentSize.height,
+    elements,
+  });
 }
 
 export function __(key: string, domain: string) {

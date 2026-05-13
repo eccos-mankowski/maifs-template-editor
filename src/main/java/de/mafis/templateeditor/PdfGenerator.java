@@ -29,6 +29,8 @@ import java.util.Map;
 public class PdfGenerator {
 
     private static final float MM_TO_POINTS = 2.83465f;
+    private static final float DEFAULT_PAGE_WIDTH_MM = 210f;
+    private static final float DEFAULT_PAGE_HEIGHT_MM = 297f;
 
     /**
      * Generates a PDF from a JSON string.
@@ -44,9 +46,13 @@ public class PdfGenerator {
             
             PDFont myFont = PDType0Font.load(document, new File("OpenSans-Regular.ttf"));
 
-            PDPage page = new PDPage(PDRectangle.A4);
+            float documentWidthMm = root.path("width").isNumber() ? (float) root.path("width").asDouble() : DEFAULT_PAGE_WIDTH_MM;
+            float documentHeightMm = root.path("height").isNumber() ? (float) root.path("height").asDouble() : DEFAULT_PAGE_HEIGHT_MM;
+            float pageWidth = documentWidthMm * MM_TO_POINTS;
+            float pageHeight = documentHeightMm * MM_TO_POINTS;
+
+            PDPage page = new PDPage(new PDRectangle(pageWidth, pageHeight));
             document.addPage(page);
-            float pageHeight = PDRectangle.A4.getHeight();
             PDPageContentStream cs = new PDPageContentStream(document, page);
 
             for (JsonNode element : root.get("elements")) {

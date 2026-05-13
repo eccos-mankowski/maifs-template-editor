@@ -22,7 +22,14 @@ import React, {useCallback, useEffect, useRef, useState} from 'react';
 import styles from './App.module.scss';
 import {Layer, Rect, Stage} from 'react-konva';
 import {__, convertSettingsToTemplateDocument} from './utils';
-import {FooterLayout, HeaderTitleBoxPosition, Settings, TicketInfoBoxLayout,} from './model/settings';
+import {
+    ElementPosition,
+    FooterLayout,
+    HeaderTitleBoxPosition,
+    Settings,
+    TicketInfoBoxLayout,
+    TicketPageFormat,
+} from './model/settings';
 import CanvasRenderer from './components/CanvasRenderer';
 import {
     getTicketSettings,
@@ -74,6 +81,8 @@ const App: React.FC = () => {
         control,
         handleSubmit,
         watch,
+        setValue,
+        getValues,
         formState,
         reset,
     } = useForm<Settings>({
@@ -129,6 +138,14 @@ const App: React.FC = () => {
     // Handle form field registration.
     useEffect(() => {
         if (activeTab === SettingsTab.HEADER) {
+            register('pageFormat');
+            register('customPageWidth', {
+                setValueAs: (v) => Number(v) || 0,
+            });
+            register('customPageHeight', {
+                setValueAs: (v) => Number(v) || 0,
+            });
+            register('elementPositions');
             register('headerImageData', {
                 setValueAs: (v) => (v && String(v)) || null,
             });
@@ -249,6 +266,17 @@ const App: React.FC = () => {
         [formState.isDirty]
     );
 
+    const handleElementPositionChange = useCallback(
+        (id: string, x: number, y: number) => {
+            const elementPositions = {...(getValues('elementPositions') ?? {})};
+            elementPositions[id] = {x, y} as ElementPosition;
+            setValue('elementPositions', elementPositions, {
+                shouldDirty: true,
+            });
+        },
+        [getValues, setValue]
+    );
+
     const renderSettingsListItem = useCallback(
         (e: SettingsId) => {
             const checked = Boolean(ticketStatuses && ticketStatuses[e]);
@@ -334,6 +362,58 @@ const App: React.FC = () => {
         case SettingsTab.HEADER:
             options = (
                 <>
+                    <FormGroup
+                        label={__('Paper size', 'eccospro-easyticket')}
+                    >
+                        <Controller
+                            name="pageFormat"
+                            control={control}
+                            render={({onChange, value, ref}) => (
+                                <RadioGroup
+                                    selectedValue={value || TicketPageFormat.A4}
+                                    onChange={onChange}
+                                    ref={ref}
+                                >
+                                    <Radio
+                                        label={__('A4', 'eccospro-easyticket')}
+                                        value={TicketPageFormat.A4}
+                                    />
+                                    <Radio
+                                        label={__('A5', 'eccospro-easyticket')}
+                                        value={TicketPageFormat.A5}
+                                    />
+                                    <Radio
+                                        label={__('Custom size', 'eccospro-easyticket')}
+                                        value={TicketPageFormat.CUSTOM}
+                                    />
+                                </RadioGroup>
+                            )}
+                        />
+                    </FormGroup>
+                    {watchedSettings.pageFormat === TicketPageFormat.CUSTOM ? (
+                        <>
+                            <FormGroup
+                                label={__('Custom width (mm)', 'eccospro-easyticket')}
+                            >
+                                <InputGroup
+                                    name="customPageWidth"
+                                    type="number"
+                                    min={10}
+                                    inputRef={register({required: true, min: 10})}
+                                />
+                            </FormGroup>
+                            <FormGroup
+                                label={__('Custom height (mm)', 'eccospro-easyticket')}
+                            >
+                                <InputGroup
+                                    name="customPageHeight"
+                                    type="number"
+                                    min={10}
+                                    inputRef={register({required: true, min: 10})}
+                                />
+                            </FormGroup>
+                        </>
+                    ) : null}
                     <FormGroup
                         label={__('Header image', 'eccospro-easyticket')}
                         helperText={__('Only the following formats are supported: PNG, JPG, GIF, WEBP', 'eccospro-reserve')}
@@ -667,7 +747,10 @@ const App: React.FC = () => {
                                     shadowBlur={10 * MM_TO_PX}
                                     shadowOpacity={0.5}
                                 />
-                                <CanvasRenderer templateDocument={doc}/>
+                                <CanvasRenderer
+                                    templateDocument={doc}
+                                    onElementPositionChange={handleElementPositionChange}
+                                />
                             </Layer>
                         </Stage>
                     </div>

@@ -45,7 +45,6 @@ enum SettingsTab {
     HEADER,
     CONTENT,
     FOOTER,
-    ACCESSIBILITY
 }
 
 const MM_TO_PX = 96 / 25.4;
@@ -180,10 +179,6 @@ const App: React.FC = () => {
 
     const handleShowFooterTab = useCallback(() => {
         setActiveTab(SettingsTab.FOOTER);
-    }, []);
-
-    const handleShowAccessibilityTab = useCallback(() => {
-        setActiveTab(SettingsTab.ACCESSIBILITY);
     }, []);
 
     const handleChangeSettingsId = useCallback(
@@ -511,10 +506,6 @@ const App: React.FC = () => {
                         />
                     </FormGroup>
                     {renderTextAlignField(
-                        'validityFormattedTextAlign',
-                        'Validity description text align'
-                    )}
-                    {renderTextAlignField(
                         'validityLabelTextAlign',
                         'Validity label text align'
                     )}
@@ -611,23 +602,8 @@ const App: React.FC = () => {
                 </>
             );
             break;
-        case SettingsTab.ACCESSIBILITY:
-            options = (
-                <>
-                    <FormGroup label={__('Alt text', 'eccospro-easyticket')}>
-                        <TextArea
-                            growVertically={true}
-                            large
-                            fill
-                            name="ticketAltText"
-                            inputRef={register}
-                        />
-                    </FormGroup>
-                </>
-            );
-            break;
     }
-    const optionsForm = <form>{options}</form>;
+    const optionsForm = <form key={activeTab}>{options}</form>;
 
     const doc =
         !loading && watchedSettings
@@ -659,13 +635,6 @@ const App: React.FC = () => {
                     >
                         <Icon icon="widget-footer"/>
                         {__('Footer', 'eccospro-easyticket')}
-                    </button>
-                    <button
-                        onClick={handleShowAccessibilityTab}
-                        className={activeTab === SettingsTab.ACCESSIBILITY ? styles.open : ''}
-                    >
-                        <Icon icon="eye-open"/>
-                        {__("Accessibility", 'eccospro-easyticket')}
                     </button>
                 </div>
                 <div className={styles.settingsPane}>

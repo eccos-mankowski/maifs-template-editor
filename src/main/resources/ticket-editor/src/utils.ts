@@ -30,6 +30,10 @@ const A5_WIDTH_MM = 148;
 const A5_HEIGHT_MM = 210;
 const MIN_CUSTOM_SIZE_MM = 10;
 const MIN_HEADER_IMAGE_HEIGHT_MM = 10;
+const MIN_LOGO_IMAGE_HEIGHT_MM = 5;
+const MIN_QR_CODE_SIZE_MM = 5;
+const DEFAULT_LOGO_WIDTH_MM = 55;
+const DEFAULT_LOGO_HEIGHT_MM = 30;
 
 function getDocumentSize(settings: Settings) {
   if (settings.pageFormat === TicketPageFormat.A5) {
@@ -90,6 +94,16 @@ export function convertSettingsToTemplateDocument(
     MIN_HEADER_IMAGE_HEIGHT_MM,
     Number(settings.headerImageHeight) || 95
   );
+  const logoImageHeight = Math.max(
+    MIN_LOGO_IMAGE_HEIGHT_MM,
+    Number(settings.logoImageHeight) || DEFAULT_LOGO_HEIGHT_MM
+  );
+  const logoImageWidth =
+    logoImageHeight * (DEFAULT_LOGO_WIDTH_MM / DEFAULT_LOGO_HEIGHT_MM);
+  const qrCodeSize = Math.max(
+    MIN_QR_CODE_SIZE_MM,
+    Number(settings.qrCodeSize) || 35
+  );
   // Header
   // Header image
   elements.push(
@@ -97,7 +111,7 @@ export function convertSettingsToTemplateDocument(
       x: 0,
       y: 0,
       width: A4_WIDTH_MM * scaleX,
-      height: headerImageHeight * scaleY,
+      height: headerImageHeight,
       imageData: getValidImageData(settings.headerImageData),
       scaleToFit: true,
     })
@@ -210,8 +224,8 @@ export function convertSettingsToTemplateDocument(
       id: 'qr_code',
       x: qrCodePosition.x,
       y: qrCodePosition.y,
-      width: 35 * scaleX,
-      height: 35 * scaleY,
+      width: qrCodeSize,
+      height: qrCodeSize,
       data: '',
     })
   );
@@ -400,8 +414,8 @@ export function convertSettingsToTemplateDocument(
       id: 'logo',
       x: logoPosition.x,
       y: logoPosition.y,
-      width: 55 * scaleX,
-      height: 30 * scaleY,
+      width: logoImageWidth,
+      height: logoImageHeight,
       imageData: getValidImageData(settings.logoImageData),
     })
   );

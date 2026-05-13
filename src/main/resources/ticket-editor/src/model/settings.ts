@@ -59,6 +59,8 @@ export class Settings {
   public footerLayout: FooterLayout = FooterLayout.ADDRESS_LEFT_LOGO_RIGHT;
   public address: string = '';
   public logoImageData: string | null = null;
+  public logoImageHeight: number = 30;
+  public qrCodeSize: number = 35;
   public legalText: string = '';
   public ticketAltText: string = '';
 
@@ -128,6 +130,11 @@ export class Settings {
       : this.footerLayout;
     this.address = String(obj.address || this.address);
     this.logoImageData = String(this.logoImageData) || obj.logoImageData;
+    this.logoImageHeight = parseDimension(
+      obj.logoImageHeight,
+      this.logoImageHeight
+    );
+    this.qrCodeSize = parseDimension(obj.qrCodeSize, this.qrCodeSize);
     this.legalText = String(obj.legalText || this.legalText);
     this.ticketAltText = String(obj.ticketAltText || this.ticketAltText );
   }

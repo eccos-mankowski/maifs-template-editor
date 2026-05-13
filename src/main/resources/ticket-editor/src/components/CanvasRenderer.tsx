@@ -27,20 +27,11 @@ function getKonvaTextDecoration(textDecoration: TextDecoration) {
 const MM_TO_PX = 96 / 25.4;
 const PT_TO_PX = 96 / 72;
 const SNAP_TOLERANCE_PX = 6;
-// Distance at which proximity guides are shown (in px)
-const PROXIMITY_THRESHOLD_PX = 60;
 const GUIDE_COLOR = '#137cbd';
 const HOVER_BORDER_COLOR = '#137cbd';
-const DISTANCE_LABEL_COLOR = '#e84393';
-const DISTANCE_LINE_COLOR = '#e84393';
 
 type GuideLine = {
   points: number[];
-  isDistance?: boolean;
-  label?: string;
-  // mid-point for label placement
-  labelX?: number;
-  labelY?: number;
 };
 
 type Bounds = {
@@ -98,8 +89,8 @@ const CanvasRenderer: React.FC<CanvasRendererProps> = ({
   };
 
   /**
-   * Compute snap-to guides AND proximity distance indicators.
-   * Returns the (possibly snapped) position and updates guide line state.
+   * Compute snap position and a single horizontal helper guide to align height
+   * with the nearest/most similar element.
    */
   const getSnappedPosition = (
     id: string | undefined,
@@ -108,13 +99,16 @@ const CanvasRenderer: React.FC<CanvasRendererProps> = ({
     width: number,
     height: number
   ) => {
-    const docW = (doc?.width || 0) * MM_TO_PX;
-    const docH = (doc?.height || 0) * MM_TO_PX;
-
-    // --- Snap stops: document edges/center + other element edges/centers ---
-    const verticalStops: number[] = [0, docW / 2, docW];
-    const horizontalStops: number[] = [0, docH / 2, docH];
-
+    const verticalStops: number[] = [
+      0,
+      ((doc?.width || 0) * MM_TO_PX) / 2,
+      (doc?.width || 0) * MM_TO_PX,
+    ];
+    const horizontalStops: number[] = [
+      0,
+      ((doc?.height || 0) * MM_TO_PX) / 2,
+      (doc?.height || 0) * MM_TO_PX,
+    ];
     const otherBounds = bounds.filter((item) => item.id !== id);
 
     otherBounds.forEach((item) => {
@@ -129,15 +123,12 @@ const CanvasRenderer: React.FC<CanvasRendererProps> = ({
     let snappedY = y;
     let bestVerticalDiff = Number.POSITIVE_INFINITY;
     let bestHorizontalDiff = Number.POSITIVE_INFINITY;
-    let verticalGuide: number | null = null;
-    let horizontalGuide: number | null = null;
 
     verticalStops.forEach((stop) => {
       itemVerticals.forEach((line, index) => {
         const diff = Math.abs(stop - line);
         if (diff < bestVerticalDiff && diff <= SNAP_TOLERANCE_PX) {
           bestVerticalDiff = diff;
-          verticalGuide = stop;
           snappedX = stop - (index === 0 ? 0 : index === 1 ? width / 2 : width);
         }
       });
@@ -148,94 +139,57 @@ const CanvasRenderer: React.FC<CanvasRendererProps> = ({
         const diff = Math.abs(stop - line);
         if (diff < bestHorizontalDiff && diff <= SNAP_TOLERANCE_PX) {
           bestHorizontalDiff = diff;
-          horizontalGuide = stop;
           snappedY = stop - (index === 0 ? 0 : index === 1 ? height / 2 : height);
         }
       });
     });
 
     const lines: GuideLine[] = [];
+    const snappedTop = snappedY;
+    const snappedCenter = snappedY + height / 2;
+    const snappedBottom = snappedY + height;
+    let bestGuide: GuideLine | null = null;
+    let bestGuideDiff = Number.POSITIVE_INFINITY;
+    let bestGuideNearness = Number.POSITIVE_INFINITY;
 
-    // Use the (possibly snapped) coords for guide rendering
-    const fx = snappedX;
-    const fy = snappedY;
-
-    // Full-canvas alignment guides
-    if (verticalGuide !== null) {
-      lines.push({ points: [verticalGuide, 0, verticalGuide, docH] });
-    }
-    if (horizontalGuide !== null) {
-      lines.push({ points: [0, horizontalGuide, docW, horizontalGuide] });
-    }
-
-    // --- Proximity: distance guides to nearby elements ---
     otherBounds.forEach((other) => {
-      // Horizontal gap: element to the right of dragged item
-      const gapRight = other.x - (fx + width);
-      if (gapRight >= 0 && gapRight <= PROXIMITY_THRESHOLD_PX) {
-        const lineY = fy + height / 2;
-        lines.push({
-          isDistance: true,
-          points: [fx + width, lineY, other.x, lineY],
-          label: `${Math.round(gapRight / MM_TO_PX)} mm`,
-          labelX: fx + width + gapRight / 2,
-          labelY: lineY - 10,
-        });
-      }
-      // Horizontal gap: element to the left
-      const gapLeft = fx - (other.x + other.width);
-      if (gapLeft >= 0 && gapLeft <= PROXIMITY_THRESHOLD_PX) {
-        const lineY = fy + height / 2;
-        lines.push({
-          isDistance: true,
-          points: [other.x + other.width, lineY, fx, lineY],
-          label: `${Math.round(gapLeft / MM_TO_PX)} mm`,
-          labelX: other.x + other.width + gapLeft / 2,
-          labelY: lineY - 10,
-        });
-      }
-      // Vertical gap: element below dragged item
-      const gapBelow = other.y - (fy + height);
-      if (gapBelow >= 0 && gapBelow <= PROXIMITY_THRESHOLD_PX) {
-        const lineX = fx + width / 2;
-        lines.push({
-          isDistance: true,
-          points: [lineX, fy + height, lineX, other.y],
-          label: `${Math.round(gapBelow / MM_TO_PX)} mm`,
-          labelX: lineX + 4,
-          labelY: fy + height + gapBelow / 2 - 6,
-        });
-      }
-      // Vertical gap: element above
-      const gapAbove = fy - (other.y + other.height);
-      if (gapAbove >= 0 && gapAbove <= PROXIMITY_THRESHOLD_PX) {
-        const lineX = fx + width / 2;
-        lines.push({
-          isDistance: true,
-          points: [lineX, other.y + other.height, lineX, fy],
-          label: `${Math.round(gapAbove / MM_TO_PX)} mm`,
-          labelX: lineX + 4,
-          labelY: other.y + other.height + gapAbove / 2 - 6,
-        });
-      }
+      const otherTop = other.y;
+      const otherCenter = other.y + other.height / 2;
+      const otherBottom = other.y + other.height;
+      const otherLines = [otherTop, otherCenter, otherBottom];
+      const draggedLines = [snappedTop, snappedCenter, snappedBottom];
 
-      // Center-X alignment guide (other element's horizontal center is close to dragged center)
-      const dragCenterX = fx + width / 2;
-      const otherCenterX = other.x + other.width / 2;
-      if (Math.abs(dragCenterX - otherCenterX) <= SNAP_TOLERANCE_PX * 2) {
-        lines.push({ points: [otherCenterX, Math.min(fy, other.y), otherCenterX, Math.max(fy + height, other.y + other.height)] });
-      }
-
-      // Top-edge alignment guide
-      if (Math.abs(fy - other.y) <= SNAP_TOLERANCE_PX * 2) {
-        lines.push({ points: [Math.min(fx, other.x), other.y, Math.max(fx + width, other.x + other.width), other.y] });
-      }
-      // Bottom-edge alignment guide
-      if (Math.abs((fy + height) - (other.y + other.height)) <= SNAP_TOLERANCE_PX * 2) {
-        const edgeY = other.y + other.height;
-        lines.push({ points: [Math.min(fx, other.x), edgeY, Math.max(fx + width, other.x + other.width), edgeY] });
-      }
+      draggedLines.forEach((draggedLine) => {
+        otherLines.forEach((otherLine) => {
+          const diff = Math.abs(draggedLine - otherLine);
+          if (diff > SNAP_TOLERANCE_PX * 2) {
+            return;
+          }
+          const nearness = Math.abs(
+            snappedX + width / 2 - (other.x + other.width / 2)
+          );
+          if (
+            diff < bestGuideDiff ||
+            (diff === bestGuideDiff && nearness < bestGuideNearness)
+          ) {
+            bestGuideDiff = diff;
+            bestGuideNearness = nearness;
+            bestGuide = {
+              points: [
+                Math.min(snappedX, other.x),
+                otherLine,
+                Math.max(snappedX + width, other.x + other.width),
+                otherLine,
+              ],
+            };
+          }
+        });
+      });
     });
+
+    if (bestGuide) {
+      lines.push(bestGuide);
+    }
 
     setGuideLines(lines);
 
@@ -427,38 +381,16 @@ const CanvasRenderer: React.FC<CanvasRendererProps> = ({
   return (
     <>
       {elements}
-      {guideLines.map((line, index) =>
-        line.isDistance ? (
-          <React.Fragment key={`dist-${index}`}>
-            <Line
-              points={line.points}
-              stroke={DISTANCE_LINE_COLOR}
-              strokeWidth={1}
-              dash={[3, 3]}
-              listening={false}
-            />
-            {line.label && line.labelX !== undefined && line.labelY !== undefined && (
-              <KonvaText
-                x={line.labelX}
-                y={line.labelY}
-                text={line.label}
-                fontSize={10}
-                fill={DISTANCE_LABEL_COLOR}
-                listening={false}
-              />
-            )}
-          </React.Fragment>
-        ) : (
-          <Line
-            key={`guide-${index}`}
-            points={line.points}
-            stroke={GUIDE_COLOR}
-            strokeWidth={1}
-            dash={[6, 6]}
-            listening={false}
-          />
-        )
-      )}
+      {guideLines.map((line, index) => (
+        <Line
+          key={`guide-${index}`}
+          points={line.points}
+          stroke={GUIDE_COLOR}
+          strokeWidth={1}
+          dash={[6, 6]}
+          listening={false}
+        />
+      ))}
     </>
   );
 };

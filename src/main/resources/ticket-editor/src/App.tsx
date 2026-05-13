@@ -50,6 +50,10 @@ enum SettingsTab {
 }
 
 const MM_TO_PX = 96 / 25.4;
+const A4_WIDTH_MM = 210;
+const A4_HEIGHT_MM = 297;
+const A5_WIDTH_MM = 148;
+const A5_HEIGHT_MM = 210;
 
 type SettingsId = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
@@ -156,6 +160,9 @@ const App: React.FC = () => {
                 required: true,
                 setValueAs: (v) => v && Number(v),
             });
+            register('qrCodeSize', {
+                setValueAs: (v) => Number(v) || 0,
+            });
         } else if (activeTab === SettingsTab.FOOTER) {
             register('footerLayout', {
                 required: true,
@@ -163,6 +170,9 @@ const App: React.FC = () => {
             });
             register('logoImageData', {
                 setValueAs: (v) => (v && String(v)),
+            });
+            register('logoImageHeight', {
+                setValueAs: (v) => Number(v) || 0,
             });
         }
     }, [activeTab, register]);
@@ -369,7 +379,30 @@ const App: React.FC = () => {
                             render={({onChange, value, ref}) => (
                                 <RadioGroup
                                     selectedValue={value || TicketPageFormat.A4}
-                                    onChange={onChange}
+                                    onChange={(event: React.FormEvent<HTMLInputElement>) => {
+                                        const nextFormat = event.currentTarget
+                                            .value as TicketPageFormat;
+                                        const currentFormat =
+                                            (value as TicketPageFormat) || TicketPageFormat.A4;
+                                        if (nextFormat === TicketPageFormat.CUSTOM) {
+                                            if (currentFormat === TicketPageFormat.A5) {
+                                                setValue('customPageWidth', A5_WIDTH_MM, {
+                                                    shouldDirty: true,
+                                                });
+                                                setValue('customPageHeight', A5_HEIGHT_MM, {
+                                                    shouldDirty: true,
+                                                });
+                                            } else {
+                                                setValue('customPageWidth', A4_WIDTH_MM, {
+                                                    shouldDirty: true,
+                                                });
+                                                setValue('customPageHeight', A4_HEIGHT_MM, {
+                                                    shouldDirty: true,
+                                                });
+                                            }
+                                        }
+                                        onChange(event);
+                                    }}
                                     ref={ref}
                                 >
                                     <Radio
@@ -499,6 +532,14 @@ const App: React.FC = () => {
                             )}
                         />
                     </FormGroup>
+                    <FormGroup label={__('QR code size (mm)', 'eccospro-easyticket')}>
+                        <InputGroup
+                            name="qrCodeSize"
+                            type="number"
+                            min={5}
+                            inputRef={register({required: true, min: 5})}
+                        />
+                    </FormGroup>
                 </>
             );
             break;
@@ -547,6 +588,14 @@ const App: React.FC = () => {
                                     buttonText={__('Select image', 'eccospro-easyticket')}
                                 />
                             )}
+                        />
+                    </FormGroup>
+                    <FormGroup label={__('Logo image height (mm)', 'eccospro-easyticket')}>
+                        <InputGroup
+                            name="logoImageHeight"
+                            type="number"
+                            min={5}
+                            inputRef={register({required: true, min: 5})}
                         />
                     </FormGroup>
                     <FormGroup label={__('Legal text', 'eccospro-easyticket')}>

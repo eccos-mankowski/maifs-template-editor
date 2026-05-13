@@ -41,6 +41,7 @@ export class Settings {
   public customPageHeight: number = 297;
   public elementPositions: Record<string, ElementPosition> = {};
   public headerImageData: string | null = null;
+  public headerImageHeight: number = 95;
   public headerTitleBoxPosition: HeaderTitleBoxPosition =
     HeaderTitleBoxPosition.OVERLAP_HEADER_IMAGE;
   public headerTitleBoxTextColor: string = '#FFFFFF';
@@ -93,6 +94,10 @@ export class Settings {
           )
         : {};
     this.headerImageData = String(obj.headerImageData) || obj.headerImageData;
+    this.headerImageHeight = parseDimension(
+      obj.headerImageHeight,
+      this.headerImageHeight
+    );
     this.headerTitleBoxPosition = Object.values(
       HeaderTitleBoxPosition
     ).includes(obj.headerTitleBoxPosition)

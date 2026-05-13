@@ -1,5 +1,5 @@
-import React from 'react';
-import { Group, Rect, Text as KonvaText } from 'react-konva';
+import React, { useMemo, useState } from 'react';
+import { Group, Line, Rect, Text as KonvaText } from 'react-konva';
 import { Document } from '../model/document.class';
 import { TextBox } from '../model/text-box.class';
 import { Image } from '../model/image.class';
@@ -26,6 +26,19 @@ function getKonvaTextDecoration(textDecoration: TextDecoration) {
 
 const MM_TO_PX = 96 / 25.4;
 const PT_TO_PX = 96 / 72;
+const SNAP_TOLERANCE_PX = 6;
+
+type GuideLine = {
+  points: number[];
+};
+
+type Bounds = {
+  id?: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
 
 const convertTextAlignToKonva = (textAlign: TextAlign) => {
   switch (textAlign) {
@@ -45,6 +58,95 @@ const CanvasRenderer: React.FC<CanvasRendererProps> = ({
   templateDocument: doc,
   onElementPositionChange,
 }) => {
+  const [guideLines, setGuideLines] = useState<GuideLine[]>([]);
+
+  const bounds = useMemo<Bounds[]>(
+    () =>
+      (doc?.elements ?? []).map((el) => ({
+        id: el.id,
+        x: el.x * MM_TO_PX,
+        y: el.y * MM_TO_PX,
+        width: el.width * MM_TO_PX,
+        height: el.height * MM_TO_PX,
+      })),
+    [doc]
+  );
+
+  const setCursor = (
+    event: { target: { getStage: () => any } },
+    cursor: string
+  ) => {
+    const stage = event.target.getStage();
+    if (stage?.container()) {
+      stage.container().style.cursor = cursor;
+    }
+  };
+
+  const getSnappedPosition = (
+    id: string | undefined,
+    x: number,
+    y: number,
+    width: number,
+    height: number
+  ) => {
+    const verticalStops: number[] = [0, (doc?.width || 0) * MM_TO_PX / 2, (doc?.width || 0) * MM_TO_PX];
+    const horizontalStops: number[] = [0, (doc?.height || 0) * MM_TO_PX / 2, (doc?.height || 0) * MM_TO_PX];
+    bounds
+      .filter((item) => item.id !== id)
+      .forEach((item) => {
+        verticalStops.push(item.x, item.x + item.width / 2, item.x + item.width);
+        horizontalStops.push(item.y, item.y + item.height / 2, item.y + item.height);
+      });
+
+    const itemVerticals = [x, x + width / 2, x + width];
+    const itemHorizontals = [y, y + height / 2, y + height];
+
+    let snappedX = x;
+    let snappedY = y;
+    let bestVerticalDiff = Number.POSITIVE_INFINITY;
+    let bestHorizontalDiff = Number.POSITIVE_INFINITY;
+    let verticalGuide: number | null = null;
+    let horizontalGuide: number | null = null;
+
+    verticalStops.forEach((stop) => {
+      itemVerticals.forEach((line, index) => {
+        const diff = Math.abs(stop - line);
+        if (diff < bestVerticalDiff && diff <= SNAP_TOLERANCE_PX) {
+          bestVerticalDiff = diff;
+          verticalGuide = stop;
+          snappedX = stop - (index === 0 ? 0 : index === 1 ? width / 2 : width);
+        }
+      });
+    });
+
+    horizontalStops.forEach((stop) => {
+      itemHorizontals.forEach((line, index) => {
+        const diff = Math.abs(stop - line);
+        if (diff < bestHorizontalDiff && diff <= SNAP_TOLERANCE_PX) {
+          bestHorizontalDiff = diff;
+          horizontalGuide = stop;
+          snappedY = stop - (index === 0 ? 0 : index === 1 ? height / 2 : height);
+        }
+      });
+    });
+
+    const lines: GuideLine[] = [];
+    if (verticalGuide !== null) {
+      lines.push({
+        points: [verticalGuide, 0, verticalGuide, (doc?.height || 0) * MM_TO_PX],
+      });
+    }
+    if (horizontalGuide !== null) {
+      lines.push({
+        points: [0, horizontalGuide, (doc?.width || 0) * MM_TO_PX, horizontalGuide],
+      });
+    }
+
+    setGuideLines(lines);
+
+    return { x: snappedX, y: snappedY };
+  };
+
   const elements = doc?.elements.map((el, key) => {
     if (el instanceof TextBox) {
       const draggable = Boolean(el.id && onElementPositionChange);
@@ -62,6 +164,34 @@ const CanvasRenderer: React.FC<CanvasRendererProps> = ({
                 position.x / MM_TO_PX,
                 position.y / MM_TO_PX
               );
+            }
+            setGuideLines([]);
+            setCursor(event, 'grab');
+          }}
+          onDragStart={(event) => {
+            setCursor(event, 'grabbing');
+          }}
+          onDragMove={(event) => {
+            if (!draggable) {
+              return;
+            }
+            const snappedPosition = getSnappedPosition(
+              el.id,
+              event.target.x(),
+              event.target.y(),
+              el.width * MM_TO_PX,
+              el.height * MM_TO_PX
+            );
+            event.target.position(snappedPosition);
+          }}
+          onMouseEnter={(event) => {
+            if (draggable) {
+              setCursor(event, 'grab');
+            }
+          }}
+          onMouseLeave={(event) => {
+            if (draggable) {
+              setCursor(event, 'default');
             }
           }}
         >
@@ -92,27 +222,13 @@ const CanvasRenderer: React.FC<CanvasRendererProps> = ({
         </Group>
       );
     } else if (el instanceof Image) {
+      const draggable = Boolean(el.id && onElementPositionChange);
       return (
-        <AttachmentImage
-          key={'elimage' + key}
+        <Group
+          key={'elimagegroup' + key}
+          draggable={draggable}
           x={el.x * MM_TO_PX}
           y={el.y * MM_TO_PX}
-          width={el.width * MM_TO_PX}
-          height={el.height * MM_TO_PX}
-          imageData={el.imageData}
-          scaleToFit={el.scaleToFit}
-        />
-      );
-    } else if (el instanceof QrCode) {
-      return (
-        <Rect
-          key={'elqrcode' + key}
-          x={el.x * MM_TO_PX}
-          y={el.y * MM_TO_PX}
-          width={el.width * MM_TO_PX}
-          height={el.height * MM_TO_PX}
-          fill="#000000"
-          draggable={Boolean(el.id && onElementPositionChange)}
           onDragEnd={(event) => {
             if (el.id && onElementPositionChange) {
               const position = event.target.position();
@@ -122,6 +238,99 @@ const CanvasRenderer: React.FC<CanvasRendererProps> = ({
                 position.y / MM_TO_PX
               );
             }
+            setGuideLines([]);
+            setCursor(event, 'grab');
+          }}
+          onDragStart={(event) => {
+            if (draggable) {
+              setCursor(event, 'grabbing');
+            }
+          }}
+          onDragMove={(event) => {
+            if (!draggable) {
+              return;
+            }
+            const snappedPosition = getSnappedPosition(
+              el.id,
+              event.target.x(),
+              event.target.y(),
+              el.width * MM_TO_PX,
+              el.height * MM_TO_PX
+            );
+            event.target.position(snappedPosition);
+          }}
+          onMouseEnter={(event) => {
+            if (draggable) {
+              setCursor(event, 'grab');
+            }
+          }}
+          onMouseLeave={(event) => {
+            if (draggable) {
+              setCursor(event, 'default');
+            }
+          }}
+        >
+          <AttachmentImage
+            key={'elimage' + key}
+            x={0}
+            y={0}
+            width={el.width * MM_TO_PX}
+            height={el.height * MM_TO_PX}
+            imageData={el.imageData}
+            scaleToFit={el.scaleToFit}
+          />
+        </Group>
+      );
+    } else if (el instanceof QrCode) {
+      const draggable = Boolean(el.id && onElementPositionChange);
+      return (
+        <Rect
+          key={'elqrcode' + key}
+          x={el.x * MM_TO_PX}
+          y={el.y * MM_TO_PX}
+          width={el.width * MM_TO_PX}
+          height={el.height * MM_TO_PX}
+          fill="#000000"
+          draggable={draggable}
+          onDragEnd={(event) => {
+            if (el.id && onElementPositionChange) {
+              const position = event.target.position();
+              onElementPositionChange(
+                el.id,
+                position.x / MM_TO_PX,
+                position.y / MM_TO_PX
+              );
+            }
+            setGuideLines([]);
+            setCursor(event, 'grab');
+          }}
+          onDragStart={(event) => {
+            if (draggable) {
+              setCursor(event, 'grabbing');
+            }
+          }}
+          onDragMove={(event) => {
+            if (!draggable) {
+              return;
+            }
+            const snappedPosition = getSnappedPosition(
+              el.id,
+              event.target.x(),
+              event.target.y(),
+              el.width * MM_TO_PX,
+              el.height * MM_TO_PX
+            );
+            event.target.position(snappedPosition);
+          }}
+          onMouseEnter={(event) => {
+            if (draggable) {
+              setCursor(event, 'grab');
+            }
+          }}
+          onMouseLeave={(event) => {
+            if (draggable) {
+              setCursor(event, 'default');
+            }
           }}
         />
       );
@@ -129,7 +338,21 @@ const CanvasRenderer: React.FC<CanvasRendererProps> = ({
       throw new Error(__('Unknown element type.', 'eccospro-easyticket'));
     }
   });
-  return <>{elements}</>;
+  return (
+    <>
+      {elements}
+      {guideLines.map((line, index) => (
+        <Line
+          key={`guide-${index}`}
+          points={line.points}
+          stroke="#137cbd"
+          strokeWidth={1}
+          dash={[6, 6]}
+          listening={false}
+        />
+      ))}
+    </>
+  );
 };
 
 export default CanvasRenderer;

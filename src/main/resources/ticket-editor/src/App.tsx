@@ -25,7 +25,6 @@ import {__, convertSettingsToTemplateDocument} from './utils';
 import {
     ElementPosition,
     FooterLayout,
-    HeaderTitleBoxPosition,
     Settings,
     TicketInfoBoxLayout,
     TicketPageFormat,
@@ -149,9 +148,8 @@ const App: React.FC = () => {
             register('headerImageData', {
                 setValueAs: (v) => (v && String(v)) || null,
             });
-            register('headerTitleBoxPosition', {
-                required: true,
-                setValueAs: (v) => v && Number(v),
+            register('headerImageHeight', {
+                setValueAs: (v) => Number(v) || 0,
             });
         } else if (activeTab === SettingsTab.CONTENT) {
             register('ticketInfoBoxLayout', {
@@ -431,68 +429,13 @@ const App: React.FC = () => {
                         />
                     </FormGroup>
                     <FormGroup
-                        label={__('Header title position', 'eccospro-easyticket')}
+                        label={__('Header image height (mm)', 'eccospro-easyticket')}
                     >
-                        <Controller
-                            name="headerTitleBoxPosition"
-                            control={control}
-                            render={({onChange, value, ref}) => (
-                                <RadioGroup
-                                    selectedValue={value && Number(value)}
-                                    onChange={onChange}
-                                    ref={ref}
-                                >
-                                    <Radio
-                                        label={__('Overlap header image', 'eccospro-easyticket')}
-                                        value={HeaderTitleBoxPosition.OVERLAP_HEADER_IMAGE}
-                                    />
-                                    <Radio
-                                        label={__('Below header image', 'eccospro-easyticket')}
-                                        value={HeaderTitleBoxPosition.BELOW_HEADER_IMAGE}
-                                    />
-                                </RadioGroup>
-                            )}
-                        />
-                    </FormGroup>
-                    <FormGroup
-                        label={__('Header title text color', 'eccospro-easyticket')}
-                    >
-                        <Controller
-                            control={control}
-                            name="headerTitleBoxTextColor"
-                            render={({onChange, value}) => (
-                                <ColorPicker onChange={onChange} value={value}/>
-                            )}
-                        />
-                    </FormGroup>
-                    <FormGroup
-                        label={__(
-                            'Header title background color',
-                            'eccospro-easyticket'
-                        )}
-                    >
-                        <Controller
-                            control={control}
-                            name="headerTitleBoxBackgroundColor"
-                            render={({onChange, value}) => (
-                                <ColorPicker
-                                    onChange={onChange}
-                                    value={value}
-                                    allowTransparent
-                                />
-                            )}
-                        />
-                    </FormGroup>
-                    <FormGroup label={__('Header title', 'eccospro-easyticket')}>
                         <InputGroup
-                            name="headerTitle"
-                            inputRef={register({required: true})}
-                        />
-                    </FormGroup>
-                    <FormGroup label={__('Header subtitle', 'eccospro-easyticket')}>
-                        <InputGroup
-                            name="headerSubtitle"
-                            inputRef={register({required: true})}
+                            name="headerImageHeight"
+                            type="number"
+                            min={10}
+                            inputRef={register({required: true, min: 10})}
                         />
                     </FormGroup>
                 </>

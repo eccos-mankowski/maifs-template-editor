@@ -2,7 +2,6 @@ import { BaseElement } from './model/base-element.class';
 import { Document } from './model/document.class';
 import {
   FooterLayout,
-  HeaderTitleBoxPosition,
   Settings,
   TicketPageFormat,
   TicketInfoBoxLayout,
@@ -30,6 +29,7 @@ const A4_HEIGHT_MM = 297;
 const A5_WIDTH_MM = 148;
 const A5_HEIGHT_MM = 210;
 const MIN_CUSTOM_SIZE_MM = 10;
+const MIN_HEADER_IMAGE_HEIGHT_MM = 10;
 
 function getDocumentSize(settings: Settings) {
   if (settings.pageFormat === TicketPageFormat.A5) {
@@ -86,6 +86,10 @@ export function convertSettingsToTemplateDocument(
   const scaleX = documentSize.width / A4_WIDTH_MM;
   const scaleY = documentSize.height / A4_HEIGHT_MM;
   const elements: BaseElement[] = [];
+  const headerImageHeight = Math.max(
+    MIN_HEADER_IMAGE_HEIGHT_MM,
+    Number(settings.headerImageHeight) || 95
+  );
   // Header
   // Header image
   elements.push(
@@ -93,64 +97,9 @@ export function convertSettingsToTemplateDocument(
       x: 0,
       y: 0,
       width: A4_WIDTH_MM * scaleX,
-      height: 95 * scaleY,
+      height: headerImageHeight * scaleY,
       imageData: getValidImageData(settings.headerImageData),
       scaleToFit: true,
-    })
-  );
-  // Header title element
-  let headerTextAddend = 0;
-  if (
-    settings.headerTitleBoxPosition ===
-    HeaderTitleBoxPosition.BELOW_HEADER_IMAGE
-  ) {
-    headerTextAddend = 40;
-  }
-  const titlePosition = getElementPosition(
-    settings,
-    'title',
-    25,
-    60 + headerTextAddend,
-    scaleX,
-    scaleY
-  );
-  elements.push(
-    new TextBox({
-      id: 'title',
-      x: titlePosition.x,
-      y: titlePosition.y,
-      width: 160 * scaleX,
-      height: 20 * scaleY,
-      text: settings.headerTitle,
-      fontSize: 48,
-      textAlign: TextAlign.ALIGN_CENTER,
-      fontWeight: FontWeight.WEIGHT_BOLD,
-      color: settings.headerTitleBoxTextColor,
-      backgroundColor: settings.headerTitleBoxBackgroundColor,
-    })
-  );
-  // Header subtitle
-  const subtitlePosition = getElementPosition(
-    settings,
-    'subtitle',
-    25,
-    80 + headerTextAddend,
-    scaleX,
-    scaleY
-  );
-  elements.push(
-    new TextBox({
-      id: 'subtitle',
-      x: subtitlePosition.x,
-      y: subtitlePosition.y,
-      width: 160 * scaleX,
-      height: 15 * scaleY,
-      text: settings.headerSubtitle,
-      fontSize: 18,
-      textAlign: TextAlign.ALIGN_CENTER,
-      fontWeight: FontWeight.WEIGHT_BOLD,
-      color: settings.headerTitleBoxTextColor,
-      backgroundColor: settings.headerTitleBoxBackgroundColor,
     })
   );
 
@@ -160,7 +109,7 @@ export function convertSettingsToTemplateDocument(
     settings,
     'ticket_text',
     15,
-    99 + headerTextAddend,
+    99,
     scaleX,
     scaleY
   );
@@ -170,7 +119,7 @@ export function convertSettingsToTemplateDocument(
       x: ticketTextPosition.x,
       y: ticketTextPosition.y,
       width: 180 * scaleX,
-      height: (55 - headerTextAddend) * scaleY,
+      height: 55 * scaleY,
       text: settings.ticketText,
       fontSize: 11,
       fontWeight: FontWeight.WEIGHT_REGULAR,
@@ -438,10 +387,19 @@ export function convertSettingsToTemplateDocument(
   );
 
   // Logo
+  const logoPosition = getElementPosition(
+    settings,
+    'logo',
+    logoX,
+    250,
+    scaleX,
+    scaleY
+  );
   elements.push(
     new Image({
-      x: logoX * scaleX,
-      y: 250 * scaleY,
+      id: 'logo',
+      x: logoPosition.x,
+      y: logoPosition.y,
       width: 55 * scaleX,
       height: 30 * scaleY,
       imageData: getValidImageData(settings.logoImageData),

@@ -1,15 +1,21 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>de.mafis</groupId>
-    <artifactId>templateeditor</artifactId>
-    <version>1.0.0</version>
+
+    <groupId>de.mafis.templateeditor</groupId>
+    <artifactId>ticket-template-library</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <name>Ticket Template Library</name>
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
+        <javafx.version>8.0.292</javafx.version>
+        <frontend-src-dir>${project.basedir}/src/main/resources/ticket-editor</frontend-src-dir>
     </properties>
-
 
     <dependencies>
         <!-- PDF Generation -->
@@ -18,15 +24,11 @@
             <artifactId>pdfbox</artifactId>
             <version>2.0.29</version>
         </dependency>
-
-        <!-- JSON Parsing -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
             <version>2.15.2</version>
         </dependency>
-
-        <!-- QR Code Generation -->
         <dependency>
             <groupId>com.google.zxing</groupId>
             <artifactId>core</artifactId>
@@ -43,47 +45,31 @@
         <resources>
             <resource>
                 <directory>src/main/resources</directory>
-                <includes>
-                    <include>**/*.fxml</include>
-                    <include>**/*.html</include>
-                    <include>**/*.js</include>
-                    <include>**/*.css</include>
-                    <include>**/*.png</include>
-                    <include>**/*.jpg</include>
-                    <include>**/*.ttf</include>
-                    <include>**/*.woff</include>
-                    <include>**/*.woff2</include>
-                    <include>**/*.eot</include>
-                </includes>
                 <excludes>
-                    <exclude>ticket-editor/node_modules/**</exclude>
-                    <exclude>ticket-editor/src/**</exclude>
+                    <exclude>ticket-editor/**</exclude>
                 </excludes>
+            </resource>
+            <resource>
+                <directory>${frontend-src-dir}</directory>
+                <includes>
+                    <include>index.html</include>
+                </includes>
+                <targetPath>ticket-editor</targetPath>
+            </resource>
+            <resource>
+                <directory>${frontend-src-dir}/dist</directory>
+                <targetPath>ticket-editor/dist</targetPath>
             </resource>
         </resources>
         <plugins>
             <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <version>3.7.1</version>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
                 <configuration>
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
-                    <archive>
-                        <manifest>
-                            <mainClass>de.mafis.templateeditor.App</mainClass>
-                        </manifest>
-                    </archive>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.target}</target>
                 </configuration>
-                <executions>
-                    <execution>
-                        <id>make-assembly</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>

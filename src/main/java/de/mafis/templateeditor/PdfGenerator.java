@@ -16,6 +16,8 @@ import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Base64;
@@ -28,25 +30,39 @@ import java.util.Map;
 public class PdfGenerator {
 
     private static final float MM_TO_POINTS = 2.83465f;
+    private static final ObjectMapper mapper = new ObjectMapper();
 
-    /**
-     * Generates a PDF from a JSON string.
-     *
-     * @param json     the JSON string representing the PDF content.
-     * @param ticketId the ID of the ticket to be embedded in the QR code.
-     */
-    public static void generatePdfFromJson(String json, String ticketId) {
-        try (PDDocument document = new PDDocument()) {
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode root = mapper.readTree(json);
-
-            PDFont myFont;
+    private static byte[] fontBytes;
+    private static synchronized byte[] getFontBytes() throws IOException {
+        if (fontBytes == null) {
             try (InputStream fontStream = PdfGenerator.class.getResourceAsStream("/OpenSans-Regular.ttf")) {
                 if (fontStream == null) {
                     throw new IOException("Font 'OpenSans-Regular.ttf' not found in classpath.");
                 }
-                myFont = PDType0Font.load(document, fontStream);
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                byte[] buffer = new byte[8192];
+                int bytesRead;
+                while ((bytesRead = fontStream.read(buffer)) != -1) {
+                    baos.write(buffer, 0, bytesRead);
+                }
+                fontBytes = baos.toByteArray();
             }
+        }
+        return fontBytes;
+    }
+
+    /**
+     * Generates a PDF from a JSON string.
+     *
+     * @param json       the JSON string representing the PDF content.
+     * @param ticketId   the ID of the ticket to be embedded in the QR code.
+     * @param outputPath the path where the generated PDF should be saved.
+     */
+    public static void generatePdfFromJson(String json, String ticketId, String outputPath) {
+        try (PDDocument document = new PDDocument()) {
+            JsonNode root = mapper.readTree(json);
+
+            PDFont myFont = PDType0Font.load(document, new ByteArrayInputStream(getFontBytes()));
 
             PDPage page = new PDPage(PDRectangle.A4);
             document.addPage(page);
@@ -71,13 +87,11 @@ public class PdfGenerator {
                 }
             }
 
-            String outputPath = "generated_ticket.pdf";
             document.save(outputPath);
             System.out.println("PDF generated to: " + outputPath);
 
         } catch (Exception e) {
             System.err.println("Error generating PDF: " + e.getMessage());
-            e.printStackTrace();
         }
     }
 

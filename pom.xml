@@ -5,9 +5,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>de.mafis.templateeditor</groupId>
-    <artifactId>ticket-template-library</artifactId>
-    <version>1.0-SNAPSHOT</version>
-    <name>Ticket Template Library</name>
+    <artifactId>mafis.ticket-template-editor</artifactId>
+    <version>1.0</version>
+    <name>Ticket Template Editor Library</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -27,7 +27,7 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.15.2</version>
+            <version>2.17.2</version>
         </dependency>
         <dependency>
             <groupId>com.google.zxing</groupId>
@@ -44,9 +44,9 @@
     <build>
         <resources>
             <resource>
-                <directory>src/main/resources</directory>
+                <directory>${frontend-src-dir}</directory>
                 <excludes>
-                    <exclude>ticket-editor/**</exclude>
+                    <exclude>**</exclude>
                 </excludes>
             </resource>
             <resource>
@@ -65,7 +65,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.1</version>
+                <version>3.13.0</version>
                 <configuration>
                     <source>${maven.compiler.source}</source>
                     <target>${maven.compiler.target}</target>

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useCallback, memo } from 'react';
 import { Group, Line, Rect, Text as KonvaText } from 'react-konva';
 import { Document } from '../model/document.class';
 import { TextBox } from '../model/text-box.class';
@@ -29,6 +29,98 @@ const PT_TO_PX = 96 / 72;
 const SNAP_TOLERANCE_PX = 6;
 const GUIDE_COLOR = '#137cbd';
 const HOVER_BORDER_COLOR = '#137cbd';
+
+interface BaseElementProps {
+  id: string | undefined;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  draggable: boolean;
+  hovered: boolean;
+  makeDragHandlers: (id: string | undefined, w: number, h: number) => any;
+  makeHoverHandlers: (id: string | undefined) => any;
+}
+
+const ElementHoverBorder = ({ width, height }: { width: number, height: number }) => (
+  <Rect
+    x={0}
+    y={0}
+    width={width}
+    height={height}
+    stroke={HOVER_BORDER_COLOR}
+    strokeWidth={1}
+    dash={[4, 4]}
+    fill="transparent"
+    listening={false}
+  />
+);
+
+const TextBoxElement = memo(({ el, draggable, hovered, makeDragHandlers, makeHoverHandlers }: { el: TextBox, draggable: boolean, hovered: boolean, makeDragHandlers: any, makeHoverHandlers: any }) => {
+  const wPx = el.width * MM_TO_PX;
+  const hPx = el.height * MM_TO_PX;
+  return (
+    <Group
+      draggable={draggable}
+      x={el.x * MM_TO_PX}
+      y={el.y * MM_TO_PX}
+      {...(draggable ? makeDragHandlers(el.id, wPx, hPx) : {})}
+      {...(draggable ? makeHoverHandlers(el.id) : {})}
+    >
+      {el.backgroundColor ? (
+        <Rect x={0} y={0} width={wPx} height={hPx} fill={el.backgroundColor || undefined} />
+      ) : null}
+      <KonvaText
+        x={0}
+        y={0}
+        width={wPx}
+        height={hPx}
+        text={el.text}
+        fontSize={el.fontSize * PT_TO_PX}
+        fontFamily={el.fontFamily}
+        fill={el.color}
+        align={convertTextAlignToKonva(el.textAlign)}
+        textDecoration={getKonvaTextDecoration(el.textDecoration)}
+      />
+      {hovered && <ElementHoverBorder width={wPx} height={hPx} />}
+    </Group>
+  );
+});
+
+const ImageElement = memo(({ el, draggable, hovered, makeDragHandlers, makeHoverHandlers }: { el: Image, draggable: boolean, hovered: boolean, makeDragHandlers: any, makeHoverHandlers: any }) => {
+  const wPx = el.width * MM_TO_PX;
+  const hPx = el.height * MM_TO_PX;
+  if (wPx <= 0 || hPx <= 0) return null;
+  return (
+    <Group
+      draggable={draggable}
+      x={el.x * MM_TO_PX}
+      y={el.y * MM_TO_PX}
+      {...(draggable ? makeDragHandlers(el.id, wPx, hPx) : {})}
+      {...(draggable ? makeHoverHandlers(el.id) : {})}
+    >
+      <AttachmentImage x={0} y={0} width={wPx} height={hPx} imageData={el.imageData} scaleToFit={el.scaleToFit} />
+      {hovered && <ElementHoverBorder width={wPx} height={hPx} />}
+    </Group>
+  );
+});
+
+const QrCodeElement = memo(({ el, draggable, hovered, makeDragHandlers, makeHoverHandlers }: { el: QrCode, draggable: boolean, hovered: boolean, makeDragHandlers: any, makeHoverHandlers: any }) => {
+  const wPx = el.width * MM_TO_PX;
+  const hPx = el.height * MM_TO_PX;
+  return (
+    <Group
+      draggable={draggable}
+      x={el.x * MM_TO_PX}
+      y={el.y * MM_TO_PX}
+      {...(draggable ? makeDragHandlers(el.id, wPx, hPx) : {})}
+      {...(draggable ? makeHoverHandlers(el.id) : {})}
+    >
+      <Rect x={0} y={0} width={wPx} height={hPx} fill="#000000" />
+      {hovered && <ElementHoverBorder width={wPx} height={hPx} />}
+    </Group>
+  );
+});
 
 type GuideLine = {
   points: number[];
@@ -94,7 +186,7 @@ const CanvasRenderer: React.FC<CanvasRendererProps> = ({
    * - dashed guides for element-to-element alignment
    * - solid guides for page-center alignment
    */
-  const getSnappedPosition = (
+  const getSnappedPosition = useCallback((
     id: string | undefined,
     x: number,
     y: number,
@@ -257,12 +349,12 @@ const CanvasRenderer: React.FC<CanvasRendererProps> = ({
     setGuideLines(lines);
 
     return { x: snappedX, y: snappedY };
-  };
+  }, [doc, bounds]);
 
   /**
    * Build drag event handlers shared across all element types.
    */
-  const makeDragHandlers = (
+  const makeDragHandlers = useCallback((
     elId: string | undefined,
     elWidthPx: number,
     elHeightPx: number
@@ -290,13 +382,13 @@ const CanvasRenderer: React.FC<CanvasRendererProps> = ({
         onElementPositionChange(elId, position.x / MM_TO_PX, position.y / MM_TO_PX);
       }
     },
-  });
+  }), [getSnappedPosition, onElementPositionChange]);
 
   /**
    * Hover handlers: show border rect on enter, hide on leave.
    * Cursor stays default (no grab) unless actively dragging.
    */
-  const makeHoverHandlers = (elId: string | undefined) => ({
+  const makeHoverHandlers = useCallback((elId: string | undefined) => ({
     onMouseEnter: () => {
       if (!isDragging) {
         setHoveredId(elId);
@@ -305,138 +397,44 @@ const CanvasRenderer: React.FC<CanvasRendererProps> = ({
     onMouseLeave: () => {
       setHoveredId(undefined);
     },
-  });
+  }), [isDragging]);
 
   const elements = doc?.elements.map((el, key) => {
+    const draggable = Boolean(el.id && onElementPositionChange);
+    const hovered = hoveredId === el.id && !isDragging;
+
     if (el instanceof TextBox) {
-      const draggable = Boolean(el.id && onElementPositionChange);
-      const wPx = el.width * MM_TO_PX;
-      const hPx = el.height * MM_TO_PX;
-      const hovered = hoveredId === el.id && !isDragging;
       return (
-        <Group
+        <TextBoxElement
           key={'eltb' + key}
+          el={el}
           draggable={draggable}
-          x={el.x * MM_TO_PX}
-          y={el.y * MM_TO_PX}
-          {...(draggable ? makeDragHandlers(el.id, wPx, hPx) : {})}
-          {...(draggable ? makeHoverHandlers(el.id) : {})}
-        >
-          {el.backgroundColor ? (
-            <Rect
-              key={'elr' + key}
-              x={0}
-              y={0}
-              width={wPx}
-              height={hPx}
-              fill={el.backgroundColor || undefined}
-            />
-          ) : null}
-          <KonvaText
-            key={'elt' + key}
-            x={0}
-            y={0}
-            width={wPx}
-            height={hPx}
-            text={el.text}
-            fontSize={el.fontSize * PT_TO_PX}
-            fontFamily={el.fontFamily}
-            fill={el.color}
-            align={convertTextAlignToKonva(el.textAlign)}
-            textDecoration={getKonvaTextDecoration(el.textDecoration)}
-          />
-          {hovered && (
-            <Rect
-              x={0}
-              y={0}
-              width={wPx}
-              height={hPx}
-              stroke={HOVER_BORDER_COLOR}
-              strokeWidth={1}
-              dash={[4, 4]}
-              fill="transparent"
-              listening={false}
-            />
-          )}
-        </Group>
+          hovered={hovered}
+          makeDragHandlers={makeDragHandlers}
+          makeHoverHandlers={makeHoverHandlers}
+        />
       );
     } else if (el instanceof Image) {
-      const draggable = Boolean(el.id && onElementPositionChange);
-      const wPx = el.width * MM_TO_PX;
-      const hPx = el.height * MM_TO_PX;
-      if (wPx <= 0 || hPx <= 0) {
-        return null;
-      }
-      const hovered = hoveredId === el.id && !isDragging;
       return (
-        <Group
-          key={'elimagegroup' + key}
+        <ImageElement
+          key={'elimg' + key}
+          el={el}
           draggable={draggable}
-          x={el.x * MM_TO_PX}
-          y={el.y * MM_TO_PX}
-          {...(draggable ? makeDragHandlers(el.id, wPx, hPx) : {})}
-          {...(draggable ? makeHoverHandlers(el.id) : {})}
-        >
-          <AttachmentImage
-            key={'elimage' + key}
-            x={0}
-            y={0}
-            width={wPx}
-            height={hPx}
-            imageData={el.imageData}
-            scaleToFit={el.scaleToFit}
-          />
-          {hovered && (
-            <Rect
-              x={0}
-              y={0}
-              width={wPx}
-              height={hPx}
-              stroke={HOVER_BORDER_COLOR}
-              strokeWidth={1}
-              dash={[4, 4]}
-              fill="transparent"
-              listening={false}
-            />
-          )}
-        </Group>
+          hovered={hovered}
+          makeDragHandlers={makeDragHandlers}
+          makeHoverHandlers={makeHoverHandlers}
+        />
       );
     } else if (el instanceof QrCode) {
-      const draggable = Boolean(el.id && onElementPositionChange);
-      const wPx = el.width * MM_TO_PX;
-      const hPx = el.height * MM_TO_PX;
-      const hovered = hoveredId === el.id && !isDragging;
       return (
-        <Group
-          key={'elqrcodegroup' + key}
+        <QrCodeElement
+          key={'elqr' + key}
+          el={el}
           draggable={draggable}
-          x={el.x * MM_TO_PX}
-          y={el.y * MM_TO_PX}
-          {...(draggable ? makeDragHandlers(el.id, wPx, hPx) : {})}
-          {...(draggable ? makeHoverHandlers(el.id) : {})}
-        >
-          <Rect
-            key={'elqrcode' + key}
-            x={0}
-            y={0}
-            width={wPx}
-            height={hPx}
-            fill="#000000"
-          />
-          {hovered && (
-            <Rect
-              x={0}
-              y={0}
-              width={wPx}
-              height={hPx}
-              stroke={HOVER_BORDER_COLOR}
-              strokeWidth={1}
-              dash={[4, 4]}
-              fill="transparent"
-              listening={false}
-            />
-          )}
-        </Group>
+          hovered={hovered}
+          makeDragHandlers={makeDragHandlers}
+          makeHoverHandlers={makeHoverHandlers}
+        />
       );
     } else {
       throw new Error(__('Unknown element type.', 'eccospro-easyticket'));

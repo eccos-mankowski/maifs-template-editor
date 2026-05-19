@@ -41,6 +41,15 @@ import {ColorPicker} from './components/ColorPicker';
 import {MediaImagePicker} from './components/MediaImagePicker';
 import ElementPickerFactory from './components/ElementPicker';
 
+// This declares the Java connector on the window object for TypeScript
+declare global {
+    interface Window {
+        javaConnector?: {
+            save: (json: string) => void;
+        };
+    }
+}
+
 enum SettingsTab {
     HEADER,
     CONTENT,
@@ -95,7 +104,7 @@ const App: React.FC = () => {
         const setSize = () => {
             if (canvasContainerRef.current) {
                 const canvasEl = canvasContainerRef.current;
-                setTimeout(() => setCanvasSize([canvasEl.offsetWidth, canvasEl.offsetHeight]), 2000);
+                setCanvasSize([canvasEl.offsetWidth, canvasEl.offsetHeight]);
             }
         };
         window.addEventListener('resize', setSize);
@@ -298,26 +307,35 @@ const App: React.FC = () => {
 
     const handleSaveSettings = useCallback(
         async (settings: Settings) => {
-            setLoading(true);
-            try {
-                console.log('saving....');
-                await setTicketSettings(settingsId, settings);
-                const doc = convertSettingsToTemplateDocument(settings);
-                alert('PDF_JSON:' + JSON.stringify(doc, null, 2));
-                await saveTicketTemplateDocument(settingsId, doc);
-                const statuses = await getTicketStatuses();
-                setTicketStatuses(statuses);
-                if (toasterRef.current) {
-                    toasterRef.current.show({
-                        icon: 'tick-circle',
-                        message: __('Design successfully saved.', 'eccospro-easyticket'),
-                        timeout: 5000,
-                        intent: Intent.SUCCESS,
-                    });
+            const doc = convertSettingsToTemplateDocument(settings);
+            const json = JSON.stringify(doc, null, 2);
+
+            if (window.javaConnector && typeof window.javaConnector.save === 'function') {
+                // Use the robust Java->JS bridge if available
+                console.log('Using javaConnector to save...');
+                window.javaConnector.save(json);
+            } else {
+                // Fallback for local development or if bridge is not injected
+                console.warn('window.javaConnector not found. Simulating save via API and console log.');
+                setLoading(true);
+                try {
+                    await setTicketSettings(settingsId, settings);
+                    await saveTicketTemplateDocument(settingsId, doc);
+                    const statuses = await getTicketStatuses();
+                    setTicketStatuses(statuses);
+                    if (toasterRef.current) {
+                        toasterRef.current.show({
+                            icon: 'tick-circle',
+                            message: __('Design successfully saved (local simulation).', 'eccospro-easyticket'),
+                            timeout: 5000,
+                            intent: Intent.SUCCESS,
+                        });
+                    }
+                } catch (e) {
+                    console.error("Save failed:", e);
                 }
-            } catch (e) {
+                setLoading(false);
             }
-            setLoading(false);
         },
         [settingsId]
     );
